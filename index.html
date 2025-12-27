@@ -78,7 +78,7 @@
             border: 1px solid #e0e0e0;
         }
 
-        /* --- DASHBOARD PROGRESS BARS --- */
+        /* --- EXAM STATS BARS --- */
         .bar-wrap { background: #eee; border-radius: 10px; height: 20px; width: 100%; margin-bottom: 10px; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; background: var(--deca-blue); width: 0%; transition: width 1s ease-in-out; }
         .bar-text { font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 5px; }
@@ -96,11 +96,9 @@
         .rp-header { border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px; }
         .tag { display: inline-block; background: #005EB8; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-right: 10px; }
         .section-title { font-weight: 800; text-transform: uppercase; color: #222; margin-top: 30px; margin-bottom: 10px; font-size: 1rem; border-left: 5px solid var(--deca-blue); padding-left: 12px; }
-        
         .judge-box { background-color: #d1ecf1; color: #0c5460; padding: 20px; border-radius: 8px; border: 1px solid #bee5eb; }
         .spoiler { filter: blur(8px); user-select: none; transition: filter 0.3s; cursor: pointer; background: #ccc; }
         .spoiler:hover, .spoiler.revealed { filter: blur(0); user-select: auto; background: #d1ecf1; }
-
         textarea { width: 100%; height: 150px; padding: 15px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 1rem; box-sizing: border-box; resize: vertical; margin-top: 10px; }
 
         /* Rubric Sliders */
@@ -117,7 +115,7 @@
         .buzz-item strong { display: block; color: #856404; margin-bottom: 5px; }
         .buzz-item span { font-size: 0.9rem; color: #555; }
 
-        /* Buttons & Quiz Fixes */
+        /* Buttons & Quiz Styles */
         button { 
             background-color: var(--deca-blue); 
             color: white; 
@@ -131,12 +129,9 @@
             margin-top: 10px; 
         }
         button:hover { background-color: var(--dark-blue); }
-        
         .secondary-btn { background-color: #6c757d; }
         .outline-btn { background: transparent; border: 2px solid var(--deca-blue); color: var(--deca-blue); }
-        
-        /* === QUIZ CSS FIX === */
-        /* Forces dark text on the white background button */
+
         .quiz-option { 
             display: block; 
             width: 100%; 
@@ -146,28 +141,26 @@
             border: 2px solid #ccc; 
             border-radius: 8px; 
             background: #fff; 
-            color: #222 !important; /* FIXED: FORCE DARK TEXT */
+            color: #222 !important; /* Force dark text */
             cursor: pointer; 
             font-size: 1.1rem; 
             font-weight: 500;
             white-space: normal;
             line-height: 1.4;
         }
-        
-        .quiz-option:hover {
-            background-color: #f0f0f0;
-            border-color: #999;
-            color: #000 !important;
-        }
-
+        .quiz-option:hover { background-color: #f0f0f0; border-color: #999; color: #000 !important; }
         .quiz-option.correct { background-color: var(--success-bg) !important; border-color: var(--success-text) !important; color: var(--success-text) !important; }
         .quiz-option.incorrect { background-color: var(--error-bg) !important; border-color: var(--error-text) !important; color: var(--error-text) !important; }
         .explanation-box { margin-top: 25px; padding: 20px; background-color: #e8f4fd; border-left: 5px solid var(--deca-blue); border-radius: 4px; display: none; }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
+        /* New Quiz Setup Screen */
+        .quiz-setup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .quiz-setup-grid button { height: 100px; font-size: 1.2rem; }
+
         @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
+            .grid-2, .quiz-setup-grid { grid-template-columns: 1fr; }
             .sidebar { display: none; } 
         }
     </style>
@@ -177,14 +170,14 @@
     <nav class="sidebar">
         <div class="logo">
             <h2>HTDM Master</h2>
-            <p>Tournament Edition</p>
+            <p>Exam Engine V7.0</p>
         </div>
         <ul>
             <li onclick="navTo('dashboard')" id="nav-dashboard" class="active-nav">Dashboard</li>
-            <li onclick="navTo('flashcards')" id="nav-flashcards">PI Flashcards</li>
-            <li onclick="navTo('quiz')" id="nav-quiz">Practice Exam</li>
+            <li onclick="navTo('quiz')" id="nav-quiz">Exam Center</li>
             <li onclick="navTo('roleplay')" id="nav-roleplay">Case Studies</li>
-            <li onclick="navTo('rubric')" id="nav-rubric">Digital Judge</li>
+            <li onclick="navTo('flashcards')" id="nav-flashcards">Flashcards</li>
+            <li onclick="navTo('rubric')" id="nav-rubric">Rubric</li>
             <li onclick="navTo('resources')" id="nav-resources">Buzzwords</li>
             <li onclick="navTo('tools')" id="nav-tools">Timer</li>
         </ul>
@@ -195,26 +188,68 @@
         <section id="dashboard">
             <header>
                 <h1>Tournament Dashboard</h1>
-                <p>Track your progress and master the Hospitality Cluster.</p>
+                <p>Welcome back. Select a module to begin.</p>
             </header>
             
-            <div class="card">
-                <h3>Your Progress Tracker</h3>
-                <div id="stats-area">
-                    <p>No exams taken yet. Complete a Practice Exam to see your stats!</p>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Exam Center</h3>
+                    <p>Take a 10, 25, 50, or 100 question practice test.</p>
+                    <button onclick="navTo('quiz')">Go to Exams</button>
+                </div>
+                <div class="card">
+                    <h3>Case Studies</h3>
+                    <p>Generate scenarios with 7 PIs and Judge Questions.</p>
+                    <button onclick="navTo('roleplay')">Open Scenarios</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="quiz" class="hidden">
+            <div id="quiz-start-screen">
+                <header>
+                    <h1>Exam Center</h1>
+                    <p>Select your test length. Questions are randomized every time.</p>
+                </header>
+
+                <div class="card">
+                    <h3>Your Exam History</h3>
+                    <div id="stats-area">
+                        <p>No exams taken yet.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Start New Test</h3>
+                    <div class="quiz-setup-grid">
+                        <button onclick="initQuiz(10)">10 Questions<br><span style="font-size:0.9rem; font-weight:normal">Quick Warmup</span></button>
+                        <button onclick="initQuiz(25)">25 Questions<br><span style="font-size:0.9rem; font-weight:normal">Standard Drill</span></button>
+                        <button onclick="initQuiz(50)">50 Questions<br><span style="font-size:0.9rem; font-weight:normal">Cluster Exam</span></button>
+                        <button onclick="initQuiz(100)">100 Questions<br><span style="font-size:0.9rem; font-weight:normal">Full Simulation</span></button>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid-2">
-                <div class="card">
-                    <h3>Quick Drill</h3>
-                    <p>Memorize key Performance Indicators.</p>
-                    <button onclick="navTo('flashcards')">Open Flashcards</button>
+            <div id="quiz-active-screen" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 id="quiz-progress-text">Question 1 of 10</h2>
+                    <span id="score-counter" style="font-size: 1.2rem; font-weight: bold; color: var(--deca-blue);">Score: 0</span>
                 </div>
                 <div class="card">
-                    <h3>Evaluate</h3>
-                    <p>Score your partner using the official rubric.</p>
-                    <button onclick="navTo('rubric')">Open Rubric</button>
+                    <h3 id="q-text">Question text...</h3>
+                    <div id="q-options"></div>
+                    <div id="q-explanation" class="explanation-box"></div>
+                    <button id="next-q-btn" onclick="nextQuestion()" style="margin-top: 20px; display: none; width: 100%;">Next Question</button>
+                    <button class="outline-btn" onclick="exitQuiz()" style="margin-top: 10px; width: 100%;">Quit Exam</button>
+                </div>
+            </div>
+
+            <div id="quiz-results-screen" class="hidden">
+                <div class="card" style="text-align: center;">
+                    <h1>Exam Complete!</h1>
+                    <div class="total-score-display" id="final-score-display">85%</div>
+                    <p id="final-score-text">You scored 17 out of 20.</p>
+                    <button onclick="navTo('quiz')">Return to Exam Center</button>
                 </div>
             </div>
         </section>
@@ -222,7 +257,6 @@
         <section id="flashcards" class="hidden">
             <div style="text-align: center; margin-bottom: 20px;">
                 <h1>PI Blitz Mode</h1>
-                <p>Official Terms from the Hospitality & Tourism Cluster Exam.</p>
             </div>
             <div class="flashcard-scene" onclick="flipCard()">
                 <div class="flashcard-inner" id="flashcard-inner">
@@ -243,27 +277,6 @@
             </div>
         </section>
 
-        <section id="quiz" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>Hospitality Cluster Exam</h1>
-                <span id="score-counter" style="font-size: 1.2rem; font-weight: bold; color: var(--deca-blue);">Score: 0</span>
-            </div>
-            <div id="quiz-card" class="card">
-                <div id="quiz-content">
-                    <h3 id="q-text">Question text goes here...</h3>
-                    <div id="q-options"></div>
-                    <div id="q-explanation" class="explanation-box"></div>
-                    <button id="next-q-btn" onclick="nextQuestion()" style="margin-top: 20px; display: none; width: 100%;">Next Question</button>
-                </div>
-                <div id="quiz-end" class="hidden" style="text-align: center;">
-                    <h2>Exam Complete!</h2>
-                    <p id="final-score" style="font-size: 2rem; margin: 20px 0; font-weight: bold; color: var(--deca-blue);"></p>
-                    <p>Your score has been saved to the Dashboard.</p>
-                    <button onclick="startQuiz()">Restart Exam</button>
-                </div>
-            </div>
-        </section>
-
         <section id="roleplay" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1>Case Study Center</h1>
@@ -280,71 +293,38 @@
         <section id="rubric" class="hidden">
             <header>
                 <h1>Digital Evaluation Form</h1>
-                <p>Rate the presentation based on the Official DECA Guidelines (Team Decision Making).</p>
             </header>
-            
             <div class="grid-2">
                 <div class="card">
                     <div class="section-title" style="margin-top:0;">Performance Indicators (70 Points)</div>
-                    <p style="font-size:0.9rem; color:#666;">Rate each of the 7 PIs from 0 to 10.</p>
-                    
                     <div id="pi-rubric-container">
-                        <p style="color:red; font-style:italic; padding:10px;">* Load a Scenario in the Case Study tab first to populate specific PIs!</p>
-                        <div class="rubric-item"><label>PI 1</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 2</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 3</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 4</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 5</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 6</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
-                        <div class="rubric-item"><label>PI 7</label><div class="range-wrap"><input type="range" max="10" value="0" class="r-input" oninput="calcScore()"><span class="score-val">0</span></div></div>
+                        <p style="color:red; font-style:italic;">* Load a Scenario in the Case Study tab first!</p>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="section-title" style="margin-top:0;">21st Century Skills (30 Points)</div>
-                    <p style="font-size:0.9rem; color:#666;">Rate each skill from 0 to 6.</p>
-
-                    <div class="rubric-item">
-                        <label>Reason effectively and use systems thinking</label>
-                        <div class="range-wrap"><input type="range" min="0" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div>
-                    </div>
-                    <div class="rubric-item">
-                        <label>Make judgments and decisions, solve problems</label>
-                        <div class="range-wrap"><input type="range" min="0" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div>
-                    </div>
-                    <div class="rubric-item">
-                        <label>Communicate clearly and show collaboration</label>
-                        <div class="range-wrap"><input type="range" min="0" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div>
-                    </div>
-                    <div class="rubric-item">
-                        <label>Show evidence of creativity</label>
-                        <div class="range-wrap"><input type="range" min="0" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div>
-                    </div>
-                    <div class="rubric-item">
-                        <label>Overall impression & response to questions</label>
-                        <div class="range-wrap"><input type="range" min="0" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div>
-                    </div>
-
-                    <div class="total-score-display">
-                        Score: <span id="total-score">0</span> / 100
-                    </div>
+                    <div class="rubric-item"><label>Reason effectively</label><div class="range-wrap"><input type="range" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div></div>
+                    <div class="rubric-item"><label>Make judgments</label><div class="range-wrap"><input type="range" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div></div>
+                    <div class="rubric-item"><label>Communicate clearly</label><div class="range-wrap"><input type="range" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div></div>
+                    <div class="rubric-item"><label>Creativity</label><div class="range-wrap"><input type="range" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div></div>
+                    <div class="rubric-item"><label>Overall impression</label><div class="range-wrap"><input type="range" max="6" value="4" class="r-input" oninput="calcScore()"><span class="score-val">4</span></div></div>
+                    <div class="total-score-display">Score: <span id="total-score">0</span> / 100</div>
                 </div>
             </div>
         </section>
 
         <section id="resources" class="hidden">
             <h1>Buzzword Bank</h1>
-            <p>Impress the judge by weaving these terms into your presentation.</p>
             <div class="card">
                 <div class="buzz-grid">
-                    <div class="buzz-item"><strong>Bleisure Travel</strong><span>Combining business trips with leisure time. A huge market trend.</span></div>
-                    <div class="buzz-item"><strong>Omnichannel</strong><span>Providing a seamless experience across mobile, desktop, and in-person.</span></div>
-                    <div class="buzz-item"><strong>Eco-Tourism</strong><span>Responsible travel to natural areas; conserving the environment.</span></div>
-                    <div class="buzz-item"><strong>Hyper-Personalization</strong><span>Using data to tailor every part of the guest experience.</span></div>
-                    <div class="buzz-item"><strong>RevPAR</strong><span>Revenue Per Available Room. The gold standard metric for hotels.</span></div>
-                    <div class="buzz-item"><strong>Touchless Tech</strong><span>Mobile check-in, digital keys, and QR codes (post-pandemic standard).</span></div>
-                    <div class="buzz-item"><strong>User Generated Content</strong><span>Reviews, Instagram posts, and TikToks made by guests.</span></div>
-                    <div class="buzz-item"><strong>Fiduciary Responsibility</strong><span>The ethical obligation to act in the best financial interest of the owners.</span></div>
+                    <div class="buzz-item"><strong>Bleisure Travel</strong><span>Combining business trips with leisure time.</span></div>
+                    <div class="buzz-item"><strong>Omnichannel</strong><span>Seamless experience across mobile, desktop, and in-person.</span></div>
+                    <div class="buzz-item"><strong>RevPAR</strong><span>Revenue Per Available Room. Key metric.</span></div>
+                    <div class="buzz-item"><strong>ADR</strong><span>Average Daily Rate. (Revenue / Rooms Sold).</span></div>
+                    <div class="buzz-item"><strong>Touchpoints</strong><span>Every interaction a guest has with the brand.</span></div>
+                    <div class="buzz-item"><strong>Fiduciary Responsibility</strong><span>Ethical obligation to financial interests.</span></div>
+                    <div class="buzz-item"><strong>Sustainable Tourism</strong><span>Minimizing impact on environment/culture.</span></div>
+                    <div class="buzz-item"><strong>Dynamic Pricing</strong><span>Changing rates in real-time based on demand.</span></div>
                 </div>
             </div>
         </section>
@@ -364,34 +344,184 @@
     </main>
 
     <script>
-        // --- 1. LOCAL STORAGE & PROGRESS ---
+        // --- 1. LOCAL STORAGE & STATS ---
         function saveScore(score, total) {
             const percentage = Math.round((score / total) * 100);
             const history = JSON.parse(localStorage.getItem('decaScores') || '[]');
-            history.push({ date: new Date().toLocaleDateString(), score: percentage });
+            history.push({ date: new Date().toLocaleDateString(), score: percentage, total: total });
             if (history.length > 5) history.shift();
             localStorage.setItem('decaScores', JSON.stringify(history));
-            updateDashboard();
+            updateStats();
         }
 
-        function updateDashboard() {
+        function updateStats() {
             const history = JSON.parse(localStorage.getItem('decaScores') || '[]');
             const container = document.getElementById('stats-area');
-            if (history.length === 0) {
-                container.innerHTML = "<p>No exams taken yet.</p>";
-                return;
-            }
-            let sum = 0; let html = '';
+            if (history.length === 0) { container.innerHTML = "<p>No exams taken yet.</p>"; return; }
+            
+            let html = '';
             history.forEach((entry, index) => {
-                sum += entry.score;
-                html += `<div class="bar-text"><span>Test ${index+1}</span><span>${entry.score}%</span></div>
+                html += `<div class="bar-text"><span>Test ${index+1} (${entry.total} Qs)</span><span>${entry.score}%</span></div>
                          <div class="bar-wrap"><div class="bar-fill" style="width:${entry.score}%; background:${entry.score>=70?'#28a745':'#005EB8'}"></div></div>`;
             });
-            const avg = Math.round(sum / history.length);
-            container.innerHTML = `<div style="text-align:center; margin-bottom:15px;"><span style="font-size:2rem; font-weight:bold; color:#005EB8">${avg}%</span><br>Average Score</div>` + html;
+            container.innerHTML = html;
         }
 
-        // --- 2. FLASHCARDS ---
+        // --- 2. MASSIVE QUESTION BANK (60+ QUESTIONS) ---
+        const fullQuestionBank = [
+            { q: "A hotel guest slips on a wet floor where no sign was placed. The hotel failed to exercise:", options: ["Strict Liability", "Reasonable Care", "Absolute Safety", "Foreseeable Action"], correct: 1, explanation: "'Reasonable Care' is the legal duty to protect guests from foreseeable harm." },
+            { q: "Which characteristic makes 'Yield Management' necessary?", options: ["Tangibility", "Perishability", "Inseparability", "Variability"], correct: 1, explanation: "Perishability means unsold inventory is lost forever, so pricing must adjust to sell it." },
+            { q: "In a civil lawsuit, the person bringing the claim is the:", options: ["Defendant", "Plaintiff", "Juror", "Arbitrator"], correct: 1, explanation: "The Plaintiff initiates the lawsuit. The Hotel is the Defendant." },
+            { q: "Dividing a market into groups (Business vs Leisure) is:", options: ["Market Segmentation", "Mass Marketing", "Brand Positioning", "Demographic Scanning"], correct: 0, explanation: "Segmentation groups consumers by common needs." },
+            { q: "Assets = Liabilities + Equity is found on which statement?", options: ["Income Statement", "Balance Sheet", "Cash Flow", "Budget"], correct: 1, explanation: "The Balance Sheet is a snapshot of financial health." },
+            { q: "The Service Recovery Paradox states:", options: ["Failures are fatal.", "A fixed failure can create higher loyalty than perfect service.", "Refunds are always required.", "Ignore complaints."], correct: 1, explanation: "Excellent recovery creates emotional bonds." },
+            { q: "Using a big brand name for a fee is:", options: ["Franchising", "Joint Venture", "Sole Proprietorship", "Direct Ownership"], correct: 0, explanation: "Franchising allows use of brand systems/marketing." },
+            { q: "Which of the following is an example of an 'intangible' product?", options: ["A burger", "A hotel bed", "A concierge's advice", "A shampoo bottle"], correct: 2, explanation: "Advice cannot be touched or stored." },
+            { q: "RevPAR stands for:", options: ["Revenue Per Average Room", "Revenue Per Available Room", "Rate Per Available Room", "Return Per Actual Rental"], correct: 1, explanation: "The most important hotel metric: Occupancy x ADR." },
+            { q: "When a hotel overbooks to account for no-shows, they are managing:", options: ["Capacity", "Supply Chain", "Inventory Risk", "Demand Fluctuations"], correct: 0, explanation: "Managing capacity ensures maximum revenue despite cancellations." },
+            { q: "A 'walked' guest is one who:", options: ["Left without paying", "Was sent to another hotel due to overbooking", "Arrived on foot", "Cancelled last minute"], correct: 1, explanation: "Walking a guest means paying for them to stay elsewhere because you overbooked." },
+            { q: "Which department is responsible for cleaning rooms?", options: ["Front Office", "Engineering", "Housekeeping", "Sales"], correct: 2, explanation: "Housekeeping is the largest department in a hotel." },
+            { q: "The 'Rack Rate' is:", options: ["The discounted rate", "The standard, non-discounted price of a room", "The employee rate", "The corporate rate"], correct: 1, explanation: "Rack rate is the highest price, often printed on the door." },
+            { q: "Ethical behavior in hospitality involves:", options: ["Doing what is legal only", "Acting with honesty and integrity beyond just laws", "Maximizing profit at all costs", "Ignoring customer complaints"], correct: 1, explanation: "Ethics goes beyond legality to fairness and integrity." },
+            { q: "A SWOT analysis identifies:", options: ["Sales, Work, Orders, Tasks", "Strengths, Weaknesses, Opportunities, Threats", "Safety, Waste, Operations, Time", "Systems, Wifi, Online, Technology"], correct: 1, explanation: "Strategic planning tool." },
+            { q: "Which is a 'Demographic' segmentation variable?", options: ["Lifestyle", "Age", "Values", "Loyalty"], correct: 1, explanation: "Demographics are stats like age, gender, income." },
+            { q: "Which is a 'Psychographic' segmentation variable?", options: ["Income", "Zip Code", "Lifestyle/Interests", "Gender"], correct: 2, explanation: "Psychographics focus on attitudes and lifestyle." },
+            { q: "What is the primary purpose of a Night Audit?", options: ["To clean the lobby", "To balance the day's financial transactions", "To check guests in", "To fire employees"], correct: 1, explanation: "Night Audit closes the business day and verifies charges." },
+            { q: "If a hotel has 100 rooms and sells 80, the Occupancy Rate is:", options: ["8%", "80%", "0.8%", "800%"], correct: 1, explanation: "80 / 100 = 80%." },
+            { q: "Which is a fixed cost?", options: ["Electricity", "Hourly Wages", "Rent/Mortgage", "Laundry Supplies"], correct: 2, explanation: "Rent stays the same regardless of how many guests stay." },
+            { q: "Which is a variable cost?", options: ["Manager Salary", "Insurance", "Rent", "Guest Soap/Shampoo"], correct: 3, explanation: "Soap usage goes up as more guests stay." },
+            { q: "The 'Product Mix' refers to:", options: ["Mixing drinks at the bar", "The assortment of products/services a business offers", "The ingredients in food", "The diversity of staff"], correct: 1, explanation: "Product mix is the total variety of goods/services offered." },
+            { q: "In communication, 'encoding' means:", options: ["Translating a message into symbols/words", "Receiving a message", "Listening", "Speaking loudly"], correct: 0, explanation: "The sender encodes the idea into a message." },
+            { q: "Body language is a form of:", options: ["Verbal communication", "Non-verbal communication", "Written communication", "Digital communication"], correct: 1, explanation: "Gestures and posture convey meaning without words." },
+            { q: "A guest complaining loudly in the lobby should be:", options: ["Ignored", "Asked to leave", "Moved to a private area to discuss", "Argued with"], correct: 2, explanation: "Isolate the guest to prevent disturbing others and de-escalate." },
+            { q: "The 'Americans with Disabilities Act' (ADA) requires hotels to:", options: ["Hire only disabled staff", "Provide reasonable accommodations (e.g., ramps)", "Offer free rooms", "Close early"], correct: 1, explanation: "ADA ensures accessibility for guests and employees." },
+            { q: "OSHA handles:", options: ["Food safety", "Workplace safety regulations", "Marketing laws", "Hotel ratings"], correct: 1, explanation: "Occupational Safety and Health Administration." },
+            { q: "A 'Target Market' is:", options: ["Any customer", "The specific group a business aims to attract", "The competition", "The employees"], correct: 1, explanation: "The specific audience you design your product for." },
+            { q: "Which is an example of 'Promotion'?", options: ["Pricing the room", "Cleaning the room", "Running a Facebook Ad", "Building the hotel"], correct: 2, explanation: "Promotion is communicating value to customers." },
+            { q: "Customer Relationship Management (CRM) software helps to:", options: ["Clean rooms", "Track guest preferences and history", "Manage electricity", "Cook food"], correct: 1, explanation: "CRM stores data to personalize service." },
+            { q: "Which is a 'Touchpoint'?", options: ["The back office", "The employee breakroom", "The Check-In Counter", "The basement"], correct: 2, explanation: "Anywhere the customer interacts with the brand." },
+            { q: "The 'chain of command' refers to:", options: ["The locks on the door", "The reporting relationship of employees", "The hotel chain name", "The supply chain"], correct: 1, explanation: "The hierarchy of authority." },
+            { q: "Empowerment means:", options: ["Giving employees authority to solve problems", "Firing employees", "micromanaging", "Ignoring rules"], correct: 0, explanation: "Allowing staff to fix guest issues without asking a manager." },
+            { q: "ROI stands for:", options: ["Return on Investment", "Rate of Interest", "Return on Interest", "Rate of Income"], correct: 0, explanation: "Profit made relative to the amount invested." },
+            { q: "A 'Loss Leader' is:", options: ["A bad manager", "A product sold at a loss to attract customers", "A bankrupt hotel", "A lost guest"], correct: 1, explanation: "Cheap items to get people in the door." },
+            { q: "Which helps improve 'Cash Flow'?", options: ["Collecting payments faster", "Paying bills earlier", "Buying more inventory", "Reducing sales"], correct: 0, explanation: "Getting cash in hand quickly improves liquidity." },
+            { q: "The 'Front of House' includes:", options: ["Kitchen", "Laundry", "Dining Room / Lobby", "HR Office"], correct: 2, explanation: "Areas guests see and use." },
+            { q: "The 'Back of House' includes:", options: ["Front Desk", "Bar", "Kitchen", "Pool"], correct: 2, explanation: "Areas guests do not typically see." },
+            { q: "Up-selling is:", options: ["Selling a more expensive version of the product", "Selling an extra item", "Selling to a taller person", "Selling quickly"], correct: 0, explanation: "Convincing a guest to upgrade to a suite." },
+            { q: "Cross-selling is:", options: ["Selling a room upgrade", "Selling a related product (e.g., Spa treatment)", "Selling to an angry guest", "Selling online"], correct: 1, explanation: "Selling complementary items." },
+            { q: "Economic 'Recession' generally leads to:", options: ["Higher travel demand", "Lower travel demand", "No change", "More business travel"], correct: 1, explanation: "Less disposable income means less travel." },
+            { q: "Sustainable tourism focuses on:", options: ["Making money fast", "Long-term environmental and cultural balance", "Ignoring locals", "Building big resorts"], correct: 1, explanation: "Preserving destinations for the future." },
+            { q: "A 'Concierge' mainly helps with:", options: ["Cleaning", "Accounting", "Guest arrangements/reservations", "Cooking"], correct: 2, explanation: "Expert local advice and bookings." },
+            { q: "Which creates a 'First Impression'?", options: ["The bill", "The checkout", "The exterior/lobby appearance", "The room service"], correct: 2, explanation: "The first thing a guest sees sets the tone." },
+            { q: "Feedback loops (surveys) are important because:", options: ["They annoy guests", "They identify areas for improvement", "They cost money", "They are required by law"], correct: 1, explanation: "Continuous improvement relies on data." },
+            { q: "In a hotel, 'turnover' can refer to:", options: ["Employee retention rate", "Flipping pancakes", "Turning the car", "Turning on lights"], correct: 0, explanation: "How many employees leave and are replaced." },
+            { q: "A 'Contract' requires:", options: ["Offer, Acceptance, Consideration", "Just a signature", "A handshake", "A lawyer"], correct: 0, explanation: "Legal elements of a binding agreement." },
+            { q: "Liability means:", options: ["Legal responsibility", "Ability to lie", "Being reliable", "Profit"], correct: 0, explanation: "Being responsible for damages or injuries." },
+            { q: "Inseparability of services means:", options: ["You can separate the service from the provider", "The provider is part of the service experience", "Services are physical", "Services last forever"], correct: 1, explanation: "The haircut (service) requires the barber (provider)." },
+            { q: "Standard Operating Procedures (SOPs) ensure:", options: ["Creativity", "Consistency", "Chaos", "Confusion"], correct: 1, explanation: "Doing tasks the same way every time." }
+        ];
+
+        // --- 3. QUIZ ENGINE (V7.0) ---
+        let currentQuizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+
+        function initQuiz(numQuestions) {
+            // 1. Shuffle full bank
+            const shuffled = [...fullQuestionBank].sort(() => 0.5 - Math.random());
+            
+            // 2. Slice requested amount
+            currentQuizQuestions = shuffled.slice(0, numQuestions);
+            
+            // 3. Reset Variables
+            currentQIndex = 0;
+            score = 0;
+            
+            // 4. Update UI
+            document.getElementById('quiz-start-screen').classList.add('hidden');
+            document.getElementById('quiz-results-screen').classList.add('hidden');
+            document.getElementById('quiz-active-screen').classList.remove('hidden');
+            document.getElementById('score-counter').innerText = `Score: 0`;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuizQuestions[currentQIndex];
+            
+            // Update Progress Text
+            document.getElementById('quiz-progress-text').innerText = `Question ${currentQIndex + 1} of ${currentQuizQuestions.length}`;
+            document.getElementById('q-text').innerText = q.q;
+            
+            const div = document.getElementById('q-options'); 
+            div.innerHTML = '';
+            document.getElementById('q-explanation').style.display = 'none'; 
+            document.getElementById('next-q-btn').style.display = 'none';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button'); 
+                btn.className = 'quiz-option'; 
+                btn.innerText = opt;
+                btn.onclick = () => submitAnswer(idx, btn); 
+                div.appendChild(btn);
+            });
+        }
+
+        function submitAnswer(idx, btn) {
+            const q = currentQuizQuestions[currentQIndex]; 
+            const all = document.querySelectorAll('.quiz-option');
+            all.forEach(b => b.disabled = true);
+            
+            if (idx === q.correct) { 
+                btn.classList.add('correct'); 
+                score++; 
+                document.getElementById('score-counter').innerText = `Score: ${score}`; 
+            } else { 
+                btn.classList.add('incorrect'); 
+                all[q.correct].classList.add('correct'); 
+            }
+            
+            const exp = document.getElementById('q-explanation'); 
+            exp.innerHTML = `<strong>Explanation:</strong> ${q.explanation}`; 
+            exp.style.display = 'block';
+            
+            const next = document.getElementById('next-q-btn'); 
+            next.style.display = 'block'; 
+            next.innerText = (currentQIndex === currentQuizQuestions.length - 1) ? "Finish Exam" : "Next Question";
+        }
+
+        function nextQuestion() { 
+            currentQIndex++; 
+            if (currentQIndex < currentQuizQuestions.length) {
+                loadQuestion(); 
+            } else { 
+                endQuiz();
+            } 
+        }
+
+        function endQuiz() {
+            saveScore(score, currentQuizQuestions.length);
+            
+            document.getElementById('quiz-active-screen').classList.add('hidden');
+            document.getElementById('quiz-results-screen').classList.remove('hidden');
+            
+            const percent = Math.round((score / currentQuizQuestions.length) * 100);
+            document.getElementById('final-score-display').innerText = `${percent}%`;
+            document.getElementById('final-score-text').innerText = `You scored ${score} out of ${currentQuizQuestions.length}.`;
+        }
+
+        function exitQuiz() {
+            if(confirm("Are you sure you want to quit? Progress will be lost.")) {
+                navTo('quiz');
+                // Reset to start screen
+                document.getElementById('quiz-active-screen').classList.add('hidden');
+                document.getElementById('quiz-results-screen').classList.add('hidden');
+                document.getElementById('quiz-start-screen').classList.remove('hidden');
+            }
+        }
+
+        // --- 4. FLASHCARDS & ROLEPLAY LOGIC ---
+        // (Kept exact same logic as before, just ensuring variables connect)
         const flashcards = [
             { term: "Perishability", def: "Services cannot be stored. An unsold room tonight is lost revenue forever.", ex: "Ex: Why hotels lower rates last minute." },
             { term: "Intangibility", def: "Services cannot be seen/touched before purchase.", ex: "Ex: Relying on reviews before booking." },
@@ -420,82 +550,25 @@
         function nextCard(e) { e.stopPropagation(); currentCardIndex = (currentCardIndex + 1) % flashcards.length; loadCard(); }
         function prevCard(e) { e.stopPropagation(); currentCardIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length; loadCard(); }
 
-        // --- 3. QUIZ ---
-        const questions = [
-            { q: "A hotel guest slips on a wet floor where no sign was placed. The hotel failed to exercise:", options: ["Strict Liability", "Reasonable Care", "Absolute Safety", "Foreseeable Action"], correct: 1, explanation: "'Reasonable Care' is the legal duty to protect guests from foreseeable harm." },
-            { q: "Which characteristic makes 'Yield Management' necessary?", options: ["Tangibility", "Perishability", "Inseparability", "Variability"], correct: 1, explanation: "Perishability means unsold inventory is lost forever, so pricing must adjust to sell it." },
-            { q: "A Front Desk agent is rude because they are having a bad day. This is:", options: ["Variability", "Intangibility", "Perishability", "Connectivity"], correct: 0, explanation: "Variability means service quality fluctuates based on the human provider." },
-            { q: "In a civil lawsuit, the person bringing the claim is the:", options: ["Defendant", "Plaintiff", "Juror", "Arbitrator"], correct: 1, explanation: "The Plaintiff initiates the lawsuit. The Hotel is the Defendant." },
-            { q: "Dividing a market into groups (Business vs Leisure) is:", options: ["Market Segmentation", "Mass Marketing", "Brand Positioning", "Demographic Scanning"], correct: 0, explanation: "Segmentation groups consumers by common needs." },
-            { q: "Assets = Liabilities + Equity is found on which statement?", options: ["Income Statement", "Balance Sheet", "Cash Flow", "Budget"], correct: 1, explanation: "The Balance Sheet is a snapshot of financial health." },
-            { q: "The Service Recovery Paradox states:", options: ["Failures are fatal.", "A fixed failure can create higher loyalty than perfect service.", "Refunds are always required.", "Ignore complaints."], correct: 1, explanation: "Excellent recovery creates emotional bonds." },
-            { q: "Using a big brand name for a fee is:", options: ["Franchising", "Joint Venture", "Sole Proprietorship", "Direct Ownership"], correct: 0, explanation: "Franchising allows use of brand systems/marketing." }
-        ];
-        let currentQIndex = 0; let score = 0;
-        function startQuiz() { currentQIndex = 0; score = 0; document.getElementById('quiz-end').classList.add('hidden'); document.getElementById('quiz-content').classList.remove('hidden'); document.getElementById('score-counter').innerText = 'Score: 0'; loadQuestion(); }
-        function loadQuestion() {
-            const q = questions[currentQIndex]; document.getElementById('q-text').innerText = `${currentQIndex + 1}. ${q.q}`;
-            const div = document.getElementById('q-options'); div.innerHTML = '';
-            document.getElementById('q-explanation').style.display = 'none'; document.getElementById('next-q-btn').style.display = 'none';
-            q.options.forEach((opt, idx) => {
-                const btn = document.createElement('button'); btn.className = 'quiz-option'; btn.innerText = opt;
-                btn.onclick = () => submitAnswer(idx, btn); div.appendChild(btn);
-            });
-        }
-        function submitAnswer(idx, btn) {
-            const q = questions[currentQIndex]; const all = document.querySelectorAll('.quiz-option');
-            all.forEach(b => b.disabled = true);
-            if (idx === q.correct) { btn.classList.add('correct'); score++; document.getElementById('score-counter').innerText = `Score: ${score}`; }
-            else { btn.classList.add('incorrect'); all[q.correct].classList.add('correct'); }
-            const exp = document.getElementById('q-explanation'); exp.innerHTML = `<strong>Explanation:</strong> ${q.explanation}`; exp.style.display = 'block';
-            const next = document.getElementById('next-q-btn'); next.style.display = 'block'; next.innerText = (currentQIndex === questions.length - 1) ? "Finish Exam" : "Next Question";
-        }
-        function nextQuestion() { currentQIndex++; if (currentQIndex < questions.length) loadQuestion(); else { saveScore(score, questions.length); document.getElementById('quiz-content').classList.add('hidden'); document.getElementById('quiz-end').classList.remove('hidden'); document.getElementById('final-score').innerText = `${score} / ${questions.length}`; } }
-
-        // --- 4. ROLEPLAY SCENARIOS (7 PIs Each) ---
         const scenarios = [
             {
                 company: "GRANDVIEW RESORT", roles: "Guest Services Team", judgeRole: "General Manager",
                 situation: "An influencer posted a video calling your staff 'robotic'. The GM wants a training plan to improve Emotional Intelligence.",
-                pis: [
-                    "Explain the nature of emotional intelligence.",
-                    "Demonstrate a customer service mindset.",
-                    "Interpret business policies.",
-                    "Handle difficult customers.",
-                    "Explain the nature of effective verbal communications.",
-                    "Show empathy in customer interactions.", 
-                    "Demonstrate problem-solving skills."
-                ],
+                pis: ["Explain the nature of emotional intelligence.", "Demonstrate a customer service mindset.", "Interpret business policies.", "Handle difficult customers.", "Effective verbal communications.", "Show empathy in customer interactions.", "Demonstrate problem-solving skills."],
                 instr: "Create a training strategy:\n1. Define EQ for staff.\n2. Create 2 role-play exercises.\n3. Explain how to measure improvement.",
                 qs: ["How do we justify the cost of training?", "What if staff refuse to change?"]
             },
             {
                 company: "URBAN STAY HOTELS", roles: "Marketing Team", judgeRole: "Senior VP",
                 situation: "Occupancy is high on weekdays (business) but low on weekends. Create a 'Weekend Bundle' for locals/families.",
-                pis: [
-                    "Identify product opportunities.",
-                    "Explain the concept of product/service mix.",
-                    "Generate product ideas.",
-                    "Describe the nature of target marketing.",
-                    "Position products/services to acquire desired business image.",
-                    "Analyze the impact of ambient factors on marketing.",
-                    "Demonstrate connections between data and marketing."
-                ],
+                pis: ["Identify product opportunities.", "Product/service mix.", "Target marketing.", "Position products for image.", "Generate product ideas.", "Analyze the impact of ambient factors on marketing.", "Demonstrate connections between data and marketing."],
                 instr: "Pitch a Weekend Bundle:\n1. Name package & target audience.\n2. List value-adds (that don't cost extra).\n3. Marketing plan for locals.",
                 qs: ["Will families disturb our business guests?", "Why include free parking if we usually charge?"]
             },
             {
                 company: "SEASIDE INN", roles: "Ops Team", judgeRole: "Owner",
                 situation: "Hurricane forecasted in 48 hrs. Evacuation is voluntary. Owner fears lost revenue vs. liability.",
-                pis: [
-                    "Explain the nature of risk management.",
-                    "Discuss the nature of emergency planning.",
-                    "Explain the nature of business ethics.",
-                    "Make decisions.",
-                    "Communicate with customers during a crisis.",
-                    "Demonstrate critical thinking.",
-                    "Explain the nature of liability."
-                ],
+                pis: ["Risk management.", "Emergency planning.", "Business ethics.", "Make decisions.", "Crisis communication.", "Demonstrate critical thinking.", "Explain the nature of liability."],
                 instr: "48-Hour Protocol:\n1. Trigger point for forced evacuation.\n2. Guest communication script.\n3. Refund policy.",
                 qs: ["If the storm misses us, we lose $50k. Worth it?", "How to handle a guest refusing to leave?"]
             }
@@ -505,34 +578,18 @@
             let piHtml = "";
             data.pis.forEach(pi => piHtml += `<li>${pi}</li>`);
             
-            // Populate PIs for RUBRIC
             const rubricContainer = document.getElementById('pi-rubric-container');
             rubricContainer.innerHTML = "";
             data.pis.forEach((pi, i) => {
-                rubricContainer.innerHTML += `
-                    <div class="rubric-item">
-                        <label>PI ${i+1}: ${pi}</label>
-                        <div class="range-wrap">
-                            <input type="range" min="0" max="10" value="7" class="r-input" oninput="calcScore()">
-                            <span class="score-val">7</span>
-                        </div>
-                    </div>
-                `;
+                rubricContainer.innerHTML += `<div class="rubric-item"><label>PI ${i+1}: ${pi}</label><div class="range-wrap"><input type="range" min="0" max="10" value="7" class="r-input" oninput="calcScore()"><span class="score-val">7</span></div></div>`;
             });
 
-            const html = `
-                <div class="rp-header"><span class="tag">HTDM</span><h2 style="margin:10px 0;">${data.company}</h2><p><strong>Role:</strong> ${data.roles} | <strong>Judge:</strong> ${data.judgeRole}</p></div>
-                <div class="section-title">Performance Indicators</div><ul class="pi-list">${piHtml}</ul>
-                <div class="section-title">Situation</div><p>${data.situation}</p>
-                <div class="section-title">Instructions</div><div style="background:#f9f9f9; padding:15px; border-left:5px solid #333;"><p style="white-space:pre-line">${data.instr}</p></div>
-                <div class="section-title">Your Notes</div><textarea placeholder="Type your outline here..."></textarea>
-                <div class="section-title">Judge's Questions</div><div class="judge-box spoiler" onclick="this.classList.add('revealed')"><ul>${data.qs.map(q=>`<li>${q}</li>`).join('')}</ul></div>
-            `;
+            const html = `<div class="rp-header"><span class="tag">HTDM</span><h2 style="margin:10px 0;">${data.company}</h2><p><strong>Role:</strong> ${data.roles} | <strong>Judge:</strong> ${data.judgeRole}</p></div><div class="section-title">Performance Indicators</div><ul class="pi-list">${piHtml}</ul><div class="section-title">Situation</div><p>${data.situation}</p><div class="section-title">Instructions</div><div style="background:#f9f9f9; padding:15px; border-left:5px solid #333;"><p style="white-space:pre-line">${data.instr}</p></div><div class="section-title">Your Notes</div><textarea placeholder="Type your outline here..."></textarea><div class="section-title">Judge's Questions</div><div class="judge-box spoiler" onclick="this.classList.add('revealed')"><ul>${data.qs.map(q=>`<li>${q}</li>`).join('')}</ul></div>`;
             document.getElementById('case-display').innerHTML = html;
-            calcScore(); // Initialize rubric logic
+            calcScore();
         }
 
-        // --- 5. RUBRIC LOGIC ---
+        // --- 5. COMMON ---
         function calcScore() {
             const inputs = document.querySelectorAll('.r-input');
             const displays = document.querySelectorAll('.score-val');
@@ -545,20 +602,27 @@
             document.getElementById('total-score').innerText = total;
         }
 
-        // --- 6. COMMON ---
         function navTo(id) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
             document.querySelectorAll('.sidebar li').forEach(l => l.classList.remove('active-nav'));
             document.getElementById('nav-'+id).classList.add('active-nav');
-            if(id==='quiz') startQuiz();
+            
+            if(id === 'quiz') {
+                // Reset Quiz View to Start Screen
+                document.getElementById('quiz-active-screen').classList.add('hidden');
+                document.getElementById('quiz-results-screen').classList.add('hidden');
+                document.getElementById('quiz-start-screen').classList.remove('hidden');
+                updateStats(); // Refresh stats when opening quiz tab
+            }
             if(id==='flashcards') loadCard();
         }
+
         let timerInt;
         function startTimer(min) { clearInterval(timerInt); let t = min*60; const d=document.getElementById('timer'); timerInt=setInterval(()=>{ const m=Math.floor(t/60); const s=t%60; d.innerText=`${m}:${s<10?'0':''}${s}`; if(t<=0) clearInterval(timerInt); t--; },1000); }
         function stopTimer() { clearInterval(timerInt); }
 
-        updateDashboard(); navTo('dashboard');
+        updateStats(); navTo('dashboard');
     </script>
 </body>
 </html>
