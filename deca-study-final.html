@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTDM Master Hub | v12.0</title>
+  <style>
+    /* =============================
+      HTDM MASTER HUB v12
+      - Single-file app
+      - Offline-friendly
+      - LocalStorage stats + history
+      - Question tagging + weak-area drill
+      - Test review + missed list
+      - Import/Export question bank
+      - Dark mode toggle
+      - Keyboard shortcuts
+    ============================== */
+
+    :root{
+      --primary:#005EB8;
+      --primary-dark:#003d7a;
+      --secondary:#636466;
+      --bg:#f4f6f8;
+      --white:#ffffff;
+      --text-main:#2c3e50;
+      --text-light:#5f6c7b;
+      --success:#d1fae5;
+      --success-text:#065f46;
+      --error:#fee2e2;
+      --error-text:#991b1b;
+      --warn:#fff7ed;
+      --warn-text:#9a3412;
+      --border:#e2e8f0;
+      --card-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+      --transition:all .25s cubic-bezier(.4,0,.2,1);
+      --ring:0 0 0 4px rgba(0,94,184,.18);
+      --radius:16px;
+    }
+
+    /* Dark theme tokens */
+    [data-theme="dark"]{
+      --bg:#0b1220;
+      --white:#0f172a;
+      --text-main:#e5e7eb;
+      --text-light:#a5b4fc;
+      --border:#243047;
+      --card-shadow:0 10px 20px rgba(0,0,0,.4);
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Inter",sans-serif;
+      display:flex;
+      height:100vh;
+      background:var(--bg);
+      color:var(--text-main);
+    }
+
+    :focus-visible{outline:none;box-shadow:var(--ring);border-radius:12px;}
+    .hidden{display:none !important;}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+    /* Sidebar */
+    .sidebar{
+      width:300px;
+      background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      flex-shrink:0;
+      box-shadow:4px 0 24px rgba(0,0,0,.15);
+      z-index:10;
+    }
+    .logo{padding:28px 22px;border-bottom:1px solid rgba(255,255,255,.12)}
+    .logo h2{margin:0;font-size:1.55rem;letter-spacing:-.5px;font-weight:900}
+    .logo p{margin:8px 0 0;opacity:.85;font-size:.85rem;font-weight:600;line-height:1.3}
+
+    .nav-links{list-style:none;padding:16px 12px;margin:0;flex:1;overflow:auto}
+    .nav-links li{
+      padding:14px 16px;
+      cursor:pointer;
+      border-radius:14px;
+      margin-bottom:8px;
+      font-weight:700;
+      transition:var(--transition);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-size:.95rem;
+      user-select:none;
+    }
+    .nav-links li:hover{background:rgba(255,255,255,.16);transform:translateX(5px)}
+    .active-nav{background:#fff !important;color:var(--primary) !important;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+    .sidebar-footer{
+      padding:16px 18px;
+      border-top:1px solid rgba(255,255,255,.12);
+      opacity:.85;
+      font-size:.82rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    /* Content */
+    .content{flex:1;padding:34px;overflow:auto;scroll-behavior:smooth;}
+    header{margin-bottom:26px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    h1{margin:0;color:var(--primary-dark);font-size:2.1rem;font-weight:900;letter-spacing:-1px}
+    [data-theme="dark"] h1{color:#c7d2fe;}
+    .subtitle{color:var(--text-light);margin-top:8px;font-size:1.05rem;line-height:1.35}
+
+    /* Cards / grid */
+    .card{
+      background:var(--white);
+      border:1px solid color-mix(in srgb, var(--border), transparent 0%);
+      padding:26px;
+      border-radius:var(--radius);
+      box-shadow:var(--card-shadow);
+      margin-bottom:18px;
+      transition:var(--transition);
+    }
+    .card:hover{transform:translateY(-2px)}
+
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+
+    /* Buttons */
+    button{
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      padding:12px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:1rem;
+      font-weight:800;
+      transition:var(--transition);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    button:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,94,184,.25)}
+    button:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+    .outline-btn{background:transparent;border:2px solid var(--primary);color:var(--primary)}
+    .outline-btn:hover{background:color-mix(in srgb, var(--primary), transparent 92%)}
+    .danger-btn{background:var(--error-text)}
+    .danger-btn:hover{background:#7f1d1d}
+    .ghost-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);box-shadow:none}
+    .ghost-btn:hover{transform:none;background:rgba(255,255,255,.26)}
+
+    /* Small UI elements */
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:color-mix(in srgb, var(--white), transparent 0%);font-weight:800;font-size:.85rem}
+    [data-theme="dark"] .pill{background:rgba(255,255,255,.04)}
+
+    .tag{display:inline-block;background:var(--primary);color:#fff;padding:6px 12px;border-radius:999px;font-size:.75rem;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+
+    /* Quiz */
+    .mode-toggle{background:color-mix(in srgb, var(--border), transparent 0%);padding:4px;border-radius:12px;display:inline-flex;flex-wrap:wrap;gap:6px}
+    .mode-btn{padding:8px 12px;border-radius:10px;font-size:.9rem;background:transparent;color:var(--text-light);box-shadow:none}
+    .mode-btn:hover{background:color-mix(in srgb, var(--white), transparent 10%);transform:none;box-shadow:none}
+    .mode-btn.active{background:var(--white);color:var(--primary);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+
+    .quiz-option{
+      width:100%;
+      text-align:left;
+      padding:18px;
+      margin:12px 0;
+      border:2px solid var(--border);
+      border-radius:14px;
+      background:var(--white);
+      color:var(--text-main);
+      cursor:pointer;
+      font-size:1.05rem;
+      font-weight:650;
+      transition:var(--transition);
+    }
+    .quiz-option:hover{border-color:var(--primary);background:color-mix(in srgb, var(--primary), transparent 95%);transform:translateX(4px)}
+    .quiz-option.correct{background:var(--success) !important;border-color:var(--success-text) !important;color:var(--success-text) !important}
+    .quiz-option.incorrect{background:var(--error) !important;border-color:var(--error-text) !important;color:var(--error-text) !important}
+
+    .explanation-box{display:none;margin-top:14px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb, var(--white), transparent 0%);border:1px solid var(--border);color:var(--text-light);line-height:1.55}
+
+    /* Roleplay / PI */
+    .situation-box{background:color-mix(in srgb, var(--white), transparent 0%);padding:18px;border-radius:14px;border-left:5px solid var(--secondary);line-height:1.7;margin:16px 0}
+    .pi-item{background:var(--white);border:1px solid var(--border);padding:14px;border-radius:12px;margin-bottom:10px;cursor:pointer;transition:.2s}
+    .pi-item:hover{border-color:var(--primary);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .pi-desc{display:none;margin-top:10px;color:var(--text-light);font-size:.95rem;padding-top:10px;border-top:1px solid var(--border)}
+
+    /* Flashcards */
+    .fc-container{height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .fc-scene{perspective:1500px;width:100%;max-width:640px;height:340px;cursor:pointer;}
+    .fc-inner{position:relative;width:100%;height:100%;text-align:center;transition:transform .8s cubic-bezier(.175,.885,.32,1.275);transform-style:preserve-3d;}
+    .fc-inner.is-flipped{transform:rotateY(180deg)}
+    .fc-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:22px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:36px;box-shadow:0 22px 55px -16px rgba(0,0,0,.2);border:1px solid rgba(0,0,0,.06)}
+    .fc-front{background:linear-gradient(135deg,var(--white) 0%,color-mix(in srgb, var(--white), #f8fafc 35%) 100%)}
+    .fc-back{background:var(--primary);color:#fff;transform:rotateY(180deg)}
+    .fc-term{font-size:2.2rem;font-weight:950;color:var(--primary);margin-bottom:12px}
+    .fc-def{font-size:1.15rem;line-height:1.6}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:18px;z-index:999}
+    .modal{width:min(900px,100%);background:var(--white);border:1px solid var(--border);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:18px}
+    .modal header{margin-bottom:10px;align-items:center}
+    .modal h2{margin:0;font-size:1.35rem;font-weight:950;color:var(--text-main)}
+    .modal .body{padding:6px 2px 14px;color:var(--text-main)}
+    textarea,input,select{
+      width:100%;
+      background:color-mix(in srgb, var(--white), transparent 0%);
+      color:var(--text-main);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:1rem;
+      font-weight:650;
+    }
+
+    /* Mobile */
+    @media (max-width: 980px){
+      .sidebar{display:none}
+      .content{padding:18px}
+      .grid-2{grid-template-columns:1fr}
+      h1{font-size:1.75rem}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" aria-label="Primary navigation">
+    <div class="logo">
+      <h2>HTDM Master</h2>
+      <p>Hospitality Team Decision Making<br><span style="opacity:.85">Offline Hub • Exams • Roleplays • PIs</span></p>
+    </div>
+
+    <ul class="nav-links" role="list">
+      <li tabindex="0" role="button" onclick="navTo('dashboard')" id="nav-dashboard" class="active-nav"><span>📊</span> Dashboard</li>
+      <li tabindex="0" role="button" onclick="navTo('quiz')" id="nav-quiz"><span>📝</span> Cluster Exam</li>
+      <li tabindex="0" role="button" onclick="navTo('drill')" id="nav-drill"><span>🎯</span> Weak-Area Drill</li>
+      <li tabindex="0" role="button" onclick="navTo('roleplay')" id="nav-roleplay"><span>🤝</span> Team Roleplays</li>
+      <li tabindex="0" role="button" onclick="navTo('flashcards')" id="nav-flashcards"><span>⚡</span> Flashcards</li>
+      <li tabindex="0" role="button" onclick="navTo('pi-dive')" id="nav-pi-dive"><span>🧠</span> PI Deep Dive</li>
+      <li tabindex="0" role="button" onclick="navTo('tools')" id="nav-tools"><span>⏱️</span> Timer</li>
+      <li tabindex="0" role="button" onclick="openSettings()" id="nav-settings"><span>⚙️</span> Settings</li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div>
+        <div style="font-weight:900">v12.0</div>
+        <div style="opacity:.75">Educational use</div>
+      </div>
+      <button class="ghost-btn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+      <header>
+        <div>
+          <h1>Tournament Dashboard</h1>
+          <div class="subtitle">HTDM prep hub: practice exams, weak-area drills, roleplay cases, PIs, timer.</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+          <span class="pill" id="dash-pill">Loading…</span>
+          <button class="outline-btn" onclick="openBank()">Question Bank</button>
+          <button onclick="navTo('quiz')">Start Exam →</button>
+        </div>
+      </header>
+
+      <div class="grid-3">
+        <div class="card" role="button" tabindex="0" onclick="navTo('quiz')" style="cursor:pointer;border-left:5px solid var(--primary)">
+          <h3 style="margin-top:0">Cluster Exam</h3>
+          <p style="color:var(--text-light); margin-bottom:14px">Study mode (instant feedback) or test mode (review at end).</p>
+          <div style="font-weight:900;color:var(--primary)">Launch Exam →</div>
+        </div>
+        <div class="card" role="button" tabindex="0" onclick="navTo('drill')" style="cursor:pointer;border-left:5px solid #f59e0b">
+          <h3 style="margin-top:0">Weak-Area Drill</h3>
+          <p style="color:var(--text-light); margin-bottom:14px">Auto-focuses on categories you miss most.</p>
+          <div style="font-weight:900;color:#f59e0b">Train Smart →</div>
+        </div>
+        <div class="card" role="button" tabindex="0" onclick="navTo('roleplay')" style="cursor:pointer;border-left:5px solid var(--secondary)">
+          <h3 style="margin-top:0">Team Scenarios</h3>
+          <p style="color:var(--text-light); margin-bottom:14px">Generate complex cases with 7 PIs + tasks.</p>
+          <div style="font-weight:900;color:var(--secondary)">Generate Case →</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0">Your Progress</h3>
+          <div id="stats-area" style="color:var(--text-light); font-style:italic">Loading stats…</div>
+          <div id="stats-more" style="color:var(--text-light); margin-top:10px"></div>
+          <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
+            <button class="outline-btn" onclick="clearStats()">Reset Stats</button>
+            <button class="outline-btn" onclick="exportStats()">Export Stats</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Keyboard Shortcuts</h3>
+          <div style="display:grid; gap:8px; color:var(--text-light)">
+            <div><strong>1–7</strong> → Navigate sections</div>
+            <div><strong>A/B/C/D</strong> → Answer in quiz</div>
+            <div><strong>N</strong> → Next question (study mode)</div>
+            <div><strong>F</strong> → Flip flashcard</div>
+            <div><strong>T</strong> → Toggle theme</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXAM CENTER -->
+    <section id="quiz" class="hidden">
+      <header>
+        <div>
+          <h1>Cluster Exam Center</h1>
+          <div class="subtitle">Hospitality & Tourism Core • Mixed categories</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="openBank()">Edit Bank</button>
+          <button class="outline-btn" onclick="resetQuiz()">Exit</button>
+        </div>
+      </header>
+
+      <div id="quiz-setup">
+        <div class="card">
+          <h3 style="margin-top:0">Configure Exam</h3>
+
+          <div class="mode-toggle" role="tablist" aria-label="Quiz mode">
+            <button class="mode-btn active" role="tab" aria-selected="true" onclick="setQuizMode('study', this)">Study Mode</button>
+            <button class="mode-btn" role="tab" aria-selected="false" onclick="setQuizMode('test', this)">Test Mode</button>
+          </div>
+
+          <div class="grid-2" style="margin-top:14px">
+            <div>
+              <label style="font-weight:900">Question Count</label>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px">
+                <button onclick="initQuiz(10)">10</button>
+                <button onclick="initQuiz(25)">25</button>
+                <button onclick="initQuiz(50)">50</button>
+              </div>
+            </div>
+            <div>
+              <label style="font-weight:900">Category Filter</label>
+              <select id="quiz-filter" style="margin-top:10px" onchange="updateFilterHint()"></select>
+              <div id="filter-hint" style="margin-top:8px; color:var(--text-light)"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <span class="pill">Bank: <span id="bank-count" style="margin-left:6px">0</span> questions</span>
+            <span class="pill">Mode: <span id="mode-pill" style="margin-left:6px">Study</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="quiz-active" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap">
+          <span class="tag" id="q-progress">Q 1/10</span>
+          <span class="pill" id="q-category">Category</span>
+          <div id="score-display" class="pill" aria-live="polite">Score: 0</div>
+        </div>
+
+        <div class="card">
+          <div id="q-text" style="font-size:1.25rem; font-weight:950; margin-bottom:18px; line-height:1.35"></div>
+          <div id="q-options"></div>
+          <div id="q-explain" class="explanation-box" aria-live="polite"></div>
+
+          <button id="next-btn" onclick="nextQuestion()" style="width:100%; margin-top:14px; display:none">Next Question →</button>
+          <button class="outline-btn" onclick="resetQuiz()" style="width:100%; margin-top:10px">Exit Exam</button>
+        </div>
+      </div>
+
+      <div id="quiz-results" class="hidden card" style="text-align:center">
+        <h1 style="margin-top:0">Exam Complete</h1>
+        <div id="final-score" style="font-size:4rem; font-weight:950; color:var(--primary); margin:18px 0"></div>
+        <div id="final-msg" style="margin-bottom:14px; color:var(--text-light)"></div>
+        <div id="final-breakdown" style="text-align:left; max-width:820px; margin:0 auto 16px; color:var(--text-light)"></div>
+
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="resetQuiz()">New Exam</button>
+          <button onclick="window.print()">Print</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEAK AREA DRILL -->
+    <section id="drill" class="hidden">
+      <header>
+        <div>
+          <h1>Weak-Area Drill</h1>
+          <div class="subtitle">Picks categories you miss most and generates short focused sets.</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="resetDrill()">Reset Drill</button>
+          <button onclick="startDrill()">Start Drill →</button>
+        </div>
+      </header>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0">Drill Settings</h3>
+          <div style="display:grid; gap:12px">
+            <div>
+              <label style="font-weight:900">Questions per set</label>
+              <select id="drill-count" style="margin-top:8px">
+                <option value="6">6</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:900">Strategy</label>
+              <select id="drill-strategy" style="margin-top:8px">
+                <option value="weak" selected>Weakest Categories First</option>
+                <option value="mixed">Mixed (Weighted)</option>
+                <option value="random">Fully Random</option>
+              </select>
+            </div>
+            <div style="color:var(--text-light)">
+              Uses your stored performance by category (from past exams). If you’re new, it defaults to mixed.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Category Performance</h3>
+          <div id="cat-stats" style="color:var(--text-light)">Loading…</div>
+        </div>
+      </div>
+
+      <div id="drill-active" class="hidden">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center">
+            <span class="tag" id="drill-progress">Drill 1/10</span>
+            <span class="pill" id="drill-cat">Category</span>
+            <span class="pill" id="drill-score">Correct: 0</span>
+          </div>
+          <div id="drill-q" style="margin-top:14px; font-size:1.2rem; font-weight:950"></div>
+          <div id="drill-opts" style="margin-top:10px"></div>
+          <div id="drill-exp" class="explanation-box" aria-live="polite"></div>
+          <button id="drill-next" onclick="drillNext()" style="width:100%; margin-top:14px; display:none">Next →</button>
+        </div>
+      </div>
+
+      <div id="drill-results" class="hidden card" style="text-align:center">
+        <h2 style="margin-top:0">Drill Complete</h2>
+        <div id="drill-final" style="font-size:2.5rem; font-weight:950; color:var(--primary); margin:12px 0"></div>
+        <div id="drill-notes" style="color:var(--text-light); margin-bottom:14px"></div>
+        <button onclick="startDrill()">Run Another Drill</button>
+      </div>
+    </section>
+
+    <!-- TEAM ROLEPLAY -->
+    <section id="roleplay" class="hidden">
+      <header>
+        <div>
+          <h1>Team Case Studies</h1>
+          <div class="subtitle">2 Participants • 30 Min Prep • 7 PIs • Built for rubric language</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="copyRoleplay()">Copy Case</button>
+          <button onclick="generateCase()">Generate New Case</button>
+        </div>
+      </header>
+
+      <div id="rp-container">
+        <div class="card" style="text-align:center; padding:68px; color:var(--text-light)">
+          <h3 style="margin-top:0">Ready to Practice?</h3>
+          <p>Click “Generate New Case” to load an HTDM scenario.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PI DEEP DIVE -->
+    <section id="pi-dive" class="hidden">
+      <header>
+        <div>
+          <h1>PI Deep Dive</h1>
+          <div class="subtitle">Tap an item to expand the definition + why it matters in HTDM.</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="expandAllPIs(true)">Expand All</button>
+          <button class="outline-btn" onclick="expandAllPIs(false)">Collapse All</button>
+        </div>
+      </header>
+
+      <div class="grid-2">
+        <div class="card" id="pi-list-container"></div>
+        <div class="card" style="background:var(--primary); color:#fff; height:fit-content; position:sticky; top:16px">
+          <h3 style="margin-top:0">Pro Tip</h3>
+          <p style="opacity:.92; line-height:1.65">
+            Team events are scored on <strong>7 PIs</strong>. Build your answers like:
+            <strong>Plan → Rationale → Metrics → Communication → Backup</strong>.
+            Always name at least one KPI (RevPAR, ADR, labor %, guest satisfaction) and tie it to the decision.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLASHCARDS -->
+    <section id="flashcards" class="hidden">
+      <header>
+        <div>
+          <h1>Vocab Flashcards</h1>
+          <div class="subtitle">Click to flip. Use Next to cycle. Shortcut: <strong>F</strong> flips.</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="shuffleFlashcards()">Shuffle</button>
+          <button onclick="nextCard()">Next Card →</button>
+        </div>
+      </header>
+
+      <div class="fc-container">
+        <div class="fc-scene" onclick="flipCard()" role="button" tabindex="0" aria-label="Flip flashcard">
+          <div class="fc-inner" id="fc-inner">
+            <div class="fc-face fc-front">
+              <div style="font-size:.9rem; text-transform:uppercase; letter-spacing:2px; opacity:.6; margin-bottom:10px">Term</div>
+              <div class="fc-term" id="fc-term">Loading…</div>
+              <div style="margin-top:18px; font-size:.9rem; color:var(--primary)">Click to Flip ↻</div>
+            </div>
+            <div class="fc-face fc-back">
+              <div style="font-size:.9rem; text-transform:uppercase; letter-spacing:2px; opacity:.85; margin-bottom:10px">Definition</div>
+              <div class="fc-def" id="fc-def">…</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:22px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="nextCard()">Skip</button>
+          <button onclick="nextCard()">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIMER -->
+    <section id="tools" class="hidden">
+      <header>
+        <div>
+          <h1>Competition Timer</h1>
+          <div class="subtitle">Prep + Presentation timers with audible finish alert.</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="outline-btn" onclick="toggleSound()" id="sound-btn">🔔 Sound: ON</button>
+          <button class="danger-btn" onclick="stopTimer()">Stop</button>
+        </div>
+      </header>
+
+      <div class="card" style="text-align:center; padding:54px">
+        <div id="timer-display" style="font-size:5.5rem; font-weight:950; font-variant-numeric:tabular-nums; color:var(--primary)">30:00</div>
+        <div style="display:flex; justify-content:center; gap:12px; margin-top:22px; flex-wrap:wrap">
+          <button onclick="startTimer(30)">30 Min (Prep)</button>
+          <button onclick="startTimer(15)">15 Min (Present)</button>
+          <button class="outline-btn" onclick="startTimer(5)">5 Min (Quick)</button>
+        </div>
+        <div style="margin-top:16px; color:var(--text-light)">Tip: Use drill sets during prep to warm up.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal (dynamic) -->
+  <div id="modal" class="hidden" aria-hidden="true"></div>
+
+  <script>
+    // =============================
+    // STORAGE KEYS
+    // =============================
+    const STATS_KEY = 'htdm_stats_v12';
+    const BANK_KEY  = 'htdm_bank_v12';
+    const PREF_KEY  = 'htdm_prefs_v12';
+
+    // =============================
+    // DEFAULT BANK (TAGGED)
+    // cat options: Operations, Marketing, Finance, HR, Law, Customer Service, General
+    // =============================
+    const DEFAULT_BANK = [
+      { id: 'q1',  cat:'Marketing', q:"Dividing a market into 'Business' and 'Leisure' is:", a:["Segmentation","Mass Marketing","Positioning","Forecasting"], c:0, e:"Segmentation groups customers by needs or behaviors." },
+      { id: 'q2',  cat:'Finance', q:"RevPAR is calculated by:", a:["Occupancy % × ADR","Total Revenue / Guests","ADR / Rooms","Rooms Sold × Price"], c:0, e:"Revenue Per Available Room = Occupancy × ADR." },
+      { id: 'q3',  cat:'Law', q:"A guest slips on a wet floor where no sign was placed. This is a failure of:", a:["Strict Liability","Reasonable Care","Absolute Safety","Foreseeable Action"], c:1, e:"Reasonable care means protecting guests from foreseeable harm." },
+      { id: 'q4',  cat:'Operations', q:"Which characteristic makes 'Yield Management' necessary?", a:["Tangibility","Perishability","Inseparability","Variability"], c:1, e:"Unsold rooms are perishable—lost revenue after the night passes." },
+      { id: 'q5',  cat:'Customer Service', q:"Handling an angry guest who booked via a 3rd party (OTA) involves:", a:["Blaming the website","Explaining policies","Empathizing & Solving","Refusing service"], c:2, e:"Use LAST: Listen, Apologize, Solve, Thank." },
+      { id: 'q6',  cat:'Finance', q:"ROI stands for:", a:["Return on Investment","Rate of Inflation","Risk of Injury","Room Occupancy Index"], c:0, e:"ROI = (Net profit / Cost) × 100." },
+      { id: 'q7',  cat:'Operations', q:"A 'Walked' guest is:", a:["Left without paying","Sent to another hotel (Overbooked)","Arrived on foot","Cancelled"], c:1, e:"Walking occurs when a hotel overbooks and must relocate a guest." },
+      { id: 'q8',  cat:'Law', q:"Which law protects guests with disabilities?", a:["OSHA","ADA","FMLA","EEOC"], c:1, e:"ADA = Americans with Disabilities Act." },
+      { id: 'q9',  cat:'Marketing', q:"The 'Rack Rate' is:", a:["Corporate Discount","Standard Price","Employee Rate","Lowest Online Price"], c:1, e:"Rack rate is the published full rate before discounts." },
+      { id: 'q10', cat:'Operations', q:"In the Product Life Cycle, a hotel needing renovation is in which stage?", a:["Introduction","Growth","Maturity","Decline"], c:3, e:"Decline signals renovation/repositioning to restart the cycle." },
+      { id: 'q11', cat:'Operations', q:"The 'Back of House' includes:", a:["Lobby","Pool","Kitchen/Laundry","Bar"], c:2, e:"Back of house = areas guests typically do not see." },
+      { id: 'q12', cat:'General', q:"Touchpoints are:", a:["iPad screens","Interactions between guest and brand","Door handles","Room keys"], c:1, e:"Every interaction (web, phone, lobby) is a touchpoint." },
+      { id: 'q13', cat:'Finance', q:"Which creates a 'First Impression'?", a:["The bill","Checkout","Exterior/Lobby","Room Service"], c:2, e:"Physical environment sets expectations immediately." },
+      { id: 'q14', cat:'Operations', q:"What is 'Amenity Creep'?", a:["Scary guests","Constant addition of free services","Slow elevators","Bugs"], c:1, e:"Perks become expected standards (e.g., free Wi‑Fi)." },
+      { id: 'q15', cat:'Finance', q:"ADR is:", a:["Room Revenue / Rooms Sold","Occupancy × ADR","Total Revenue / Guests","Rooms Sold × Price"], c:0, e:"Average Daily Rate = room revenue divided by rooms sold." }
+    ];
+
+    // =============================
+    // ROLEPLAY SCENARIOS
+    // =============================
+    const scenarios = [
+      {
+        title: "The Norovirus Crisis (Ops)",
+        roles: "Manager & Asst. Manager",
+        judge: "Hotel Owner",
+        situation: "3 guests are sick. Rumors of 'Norovirus' are trending on social media. A wedding party of 200 checks in today.",
+        pis: [
+          "Explain the nature of crisis management.",
+          "Handle media relations.",
+          "Ensure safety compliance.",
+          "Demonstrate critical thinking.",
+          "Resolve conflict.",
+          "Interpret business policies.",
+          "Use proper communication channels."
+        ],
+        task: "1) Create an isolation/sanitation plan.\n2) Draft a public statement.\n3) Decide: inform the wedding party? (Risk vs Revenue)."
+      },
+      {
+        title: "The Corporate Contract (Sales)",
+        roles: "Sales Team",
+        judge: "Tech Company CEO",
+        situation: "A company wants 500 room nights/year but demands $80. Break-even is $75; rack rate is $150.",
+        pis: [
+          "Negotiate contracts.",
+          "Analyze financial data.",
+          "Explain overhead/operating costs.",
+          "Demonstrate active listening.",
+          "Use closing sales techniques.",
+          "Manage customer relationships.",
+          "Explain profit and value-adds."
+        ],
+        task: "You cannot go below $80. Offer value-adds (credits, upgrades, perks) to close. Protect RevPAR and brand." 
+      },
+      {
+        title: "The Staff Walkout (HR)",
+        roles: "HR Director & GM",
+        judge: "Hotel Owner",
+        situation: "Housekeeping threatens to strike tomorrow (100% occupancy) due to a new '30 min/room' quota.",
+        pis: [
+          "Foster positive work environment.",
+          "Determine organizational culture.",
+          "Negotiate labor disputes.",
+          "Explain HR practices.",
+          "Demonstrate empathy.",
+          "Problem-solving skills.",
+          "Leadership skills."
+        ],
+        task: "1) Address staff concerns.\n2) Propose compromise to owner.\n3) Create contingency plan for tomorrow." 
+      }
+    ];
+
+    // =============================
+    // PI DATA
+    // =============================
+    const piData = [
+      { t:"Emotional Intelligence", d:"Manage your emotions + read others'. Use it during service recovery and conflict." },
+      { t:"Yield Management", d:"Adjust pricing based on demand to maximize revenue (perishable inventory)." },
+      { t:"Service Recovery", d:"Fix failures fast and turn negatives into loyalty. Use LAST: Listen, Apologize, Solve, Thank." },
+      { t:"Touchpoints", d:"Every guest-brand interaction. Consistency creates trust and repeat business." },
+      { t:"Fiduciary Duty", d:"Act in the owner/investors’ best financial interest. Show ROI logic." },
+      { t:"RevPAR", d:"Revenue per available room. Connect decisions (rate, occupancy, channels) to RevPAR." },
+      { t:"Labor %", d:"Labor cost as % of revenue. Staffing decisions should reference labor % targets." }
+    ];
+
+    // =============================
+    // FLASHCARDS
+    // =============================
+    let flashcards = [
+      { t:"RevPAR", d:"Revenue Per Available Room = Occupancy × ADR." },
+      { t:"ADR", d:"Average Daily Rate = Room Revenue / Rooms Sold." },
+      { t:"Perishability", d:"Unsold rooms tonight become lost revenue forever." },
+      { t:"Intangibility", d:"Services can’t be inspected before purchase—reviews matter." },
+      { t:"Walked Guest", d:"Guest relocated due to overbooking (at your expense)." },
+    ];
+
+    // =============================
+    // DOM HELPERS
+    // =============================
+    const $ = (id) => document.getElementById(id);
+
+    function toast(msg){
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.style.position='fixed';
+      el.style.bottom='16px';
+      el.style.right='16px';
+      el.style.zIndex='9999';
+      el.style.background='rgba(0,0,0,.82)';
+      el.style.color='#fff';
+      el.style.padding='10px 12px';
+      el.style.borderRadius='12px';
+      el.style.fontWeight='850';
+      el.style.maxWidth='min(420px, 92vw)';
+      el.style.boxShadow='0 14px 32px rgba(0,0,0,.25)';
+      document.body.appendChild(el);
+      setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(6px)';el.style.transition='all .25s';},1300);
+      setTimeout(()=>el.remove(),1700);
+    }
+
+    // =============================
+    // PREFS (theme + sound)
+    // =============================
+    let prefs = { theme:'light', sound:true };
+
+    function loadPrefs(){
+      try{ prefs = JSON.parse(localStorage.getItem(PREF_KEY)) || prefs; }catch{}
+      document.documentElement.dataset.theme = prefs.theme;
+      updateSoundUI();
+    }
+
+    function savePrefs(){
+      localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+    }
+
+    function toggleTheme(){
+      prefs.theme = (prefs.theme === 'dark') ? 'light' : 'dark';
+      document.documentElement.dataset.theme = prefs.theme;
+      savePrefs();
+      toast(prefs.theme === 'dark' ? 'Dark mode on' : 'Light mode on');
+    }
+
+    function toggleSound(){
+      prefs.sound = !prefs.sound;
+      savePrefs();
+      updateSoundUI();
+    }
+
+    function updateSoundUI(){
+      const btn = $('sound-btn');
+      if(!btn) return;
+      btn.textContent = prefs.sound ? '🔔 Sound: ON' : '🔕 Sound: OFF';
+    }
+
+    // =============================
+    // NAVIGATION
+    // =============================
+    function navTo(id){
+      document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+      $(id).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-links li').forEach(l=>l.classList.remove('active-nav'));
+      const navItem = $('nav-'+id);
+      if(navItem) navItem.classList.add('active-nav');
+      window.scrollTo(0,0);
+
+      // section-specific refresh
+      if(id === 'drill') renderCategoryStats();
+      if(id === 'quiz') refreshQuizSetup();
+    }
+
+    // Activate elements with Enter/Space
+    document.addEventListener('keydown', (e)=>{
+      const isActivate = (e.key === 'Enter' || e.key === ' ');
+      if(isActivate){
+        const el = document.activeElement;
+        if(el && el.getAttribute('role') === 'button' && typeof el.onclick === 'function'){
+          e.preventDefault();
+          el.onclick();
+        }
+      }
+
+      // Section shortcuts 1–7
+      const map = {
+        '1':'dashboard','2':'quiz','3':'drill','4':'roleplay','5':'flashcards','6':'pi-dive','7':'tools'
+      };
+      if(map[e.key]){ navTo(map[e.key]); }
+
+      // Quiz answer shortcuts A-D
+      if(['a','b','c','d','A','B','C','D'].includes(e.key)){
+        const idx = ({'a':0,'b':1,'c':2,'d':3,'A':0,'B':1,'C':2,'D':3})[e.key];
+        const btns = Array.from(document.querySelectorAll('.quiz-option'));
+        if(btns[idx] && !btns[idx].disabled) btns[idx].click();
+      }
+
+      // Next question shortcut (study mode)
+      if((e.key==='n' || e.key==='N') && !$('next-btn').classList.contains('hidden') && $('next-btn').style.display !== 'none'){
+        $('next-btn').click();
+      }
+
+      // Flashcard flip shortcut
+      if(e.key==='f' || e.key==='F'){
+        const sec = $('flashcards');
+        if(!sec.classList.contains('hidden')) flipCard();
+      }
+
+      // Theme shortcut
+      if(e.key==='t' || e.key==='T') toggleTheme();
+    });
+
+    // =============================
+    // BANK + STATS
+    // =============================
+    function loadBank(){
+      try{
+        const stored = JSON.parse(localStorage.getItem(BANK_KEY));
+        if(Array.isArray(stored) && stored.length) return stored;
+      }catch{}
+      localStorage.setItem(BANK_KEY, JSON.stringify(DEFAULT_BANK));
+      return [...DEFAULT_BANK];
+    }
+
+    function saveBank(bank){
+      localStorage.setItem(BANK_KEY, JSON.stringify(bank));
+      refreshQuizSetup();
+      toast('Question bank saved');
+    }
+
+    function loadStats(){
+      try{
+        return JSON.parse(localStorage.getItem(STATS_KEY)) || {
+          attempts:0, best:null, last:null,
+          byCat:{} // {cat:{seen, correct}}
+        };
+      }catch{
+        return { attempts:0, best:null, last:null, byCat:{} };
+      }
+    }
+
+    function saveStatsUpdate({pct, dateISO, byCatDelta}){
+      const s = loadStats();
+      s.attempts += 1;
+      s.last = { pct, date: dateISO };
+      s.best = (s.best === null) ? pct : Math.max(s.best, pct);
+
+      // merge category deltas
+      for(const [cat, d] of Object.entries(byCatDelta||{})){
+        if(!s.byCat[cat]) s.byCat[cat] = { seen:0, correct:0 };
+        s.byCat[cat].seen += d.seen;
+        s.byCat[cat].correct += d.correct;
+      }
+
+      localStorage.setItem(STATS_KEY, JSON.stringify(s));
+      renderStats();
+      renderCategoryStats();
+      renderDashPill();
+    }
+
+    function clearStats(){
+      localStorage.removeItem(STATS_KEY);
+      renderStats();
+      renderCategoryStats();
+      renderDashPill();
+      toast('Stats reset');
+    }
+
+    function exportStats(){
+      const s = loadStats();
+      const blob = new Blob([JSON.stringify(s, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'htdm_stats.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderStats(){
+      const s = loadStats();
+      if(s.attempts === 0){
+        $('stats-area').textContent = 'No exams taken yet. Start a quiz to see stats!';
+        $('stats-more').textContent = '';
+        return;
+      }
+      const lastDate = new Date(s.last.date).toLocaleDateString();
+      $('stats-area').textContent = `Last Exam: ${s.last.pct}% (${lastDate})`;
+      $('stats-more').textContent = `Best Score: ${s.best}% • Attempts: ${s.attempts}`;
+    }
+
+    function getCategories(bank){
+      return Array.from(new Set(bank.map(q=>q.cat))).sort((a,b)=>a.localeCompare(b));
+    }
+
+    function renderDashPill(){
+      const s = loadStats();
+      const bank = loadBank();
+      const text = s.attempts
+        ? `Best ${s.best}% • Attempts ${s.attempts} • Bank ${bank.length}`
+        : `No exams yet • Bank ${bank.length}`;
+      $('dash-pill').textContent = text;
+    }
+
+    // =============================
+    // QUIZ ENGINE
+    // =============================
+    let quizMode = 'study';
+    let quizFilter = 'All';
+    let currentQs = [];
+    let qIndex = 0;
+    let score = 0;
+    let missed = [];
+    let catDelta = {}; // {cat:{seen,correct}}
+
+    function setQuizMode(mode, btn){
+      quizMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b=>{
+        b.classList.remove('active');
+        b.setAttribute('aria-selected','false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      $('mode-pill').textContent = (mode === 'study') ? 'Study' : 'Test';
+    }
+
+    function refreshQuizSetup(){
+      const bank = loadBank();
+      $('bank-count').textContent = bank.length;
+
+      // populate filter
+      const cats = ['All', ...getCategories(bank)];
+      const sel = $('quiz-filter');
+      sel.innerHTML = '';
+      cats.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      sel.value = quizFilter;
+      updateFilterHint();
+    }
+
+    function updateFilterHint(){
+      quizFilter = $('quiz-filter').value;
+      const bank = loadBank();
+      const pool = (quizFilter === 'All') ? bank : bank.filter(q=>q.cat === quizFilter);
+      $('filter-hint').textContent = `Pool size: ${pool.length} question(s)`;
+    }
+
+    function initQuiz(n){
+      resetQuiz(true);
+      const bank = loadBank();
+      const pool = (quizFilter === 'All') ? bank : bank.filter(q=>q.cat === quizFilter);
+      if(pool.length === 0){ toast('No questions in that category yet.'); return; }
+
+      currentQs = [...pool].sort(()=>Math.random()-0.5).slice(0, Math.min(n, pool.length));
+      qIndex = 0; score = 0; missed = [];
+      catDelta = {};
+
+      $('quiz-setup').classList.add('hidden');
+      $('quiz-active').classList.remove('hidden');
+      $('score-display').textContent = 'Score: 0';
+      loadQuestion();
+    }
+
+    function loadQuestion(){
+      const q = currentQs[qIndex];
+      $('q-progress').textContent = `Q ${qIndex+1}/${currentQs.length}`;
+      $('q-category').textContent = `Category: ${q.cat}`;
+      $('q-text').textContent = q.q;
+
+      $('q-explain').style.display='none';
+      $('q-explain').innerHTML='';
+      $('next-btn').style.display='none';
+
+      const div = $('q-options');
+      div.innerHTML = '';
+
+      q.a.forEach((opt, i)=>{
+        const btn = document.createElement('button');
+        btn.className='quiz-option';
+        btn.type='button';
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.onclick = ()=>handleAnswer(i, btn, q);
+        div.appendChild(btn);
+      });
+    }
+
+    function addCatSeen(cat, isCorrect){
+      if(!catDelta[cat]) catDelta[cat] = { seen:0, correct:0 };
+      catDelta[cat].seen += 1;
+      catDelta[cat].correct += isCorrect ? 1 : 0;
+    }
+
+    function handleAnswer(choiceIndex, clickedBtn, q){
+      const btns = Array.from(document.querySelectorAll('.quiz-option'));
+      btns.forEach(b=>b.disabled=true);
+
+      const isCorrect = (choiceIndex === q.c);
+      if(isCorrect) score++;
+      else missed.push({ question:q.q, correct:q.a[q.c], picked:q.a[choiceIndex], cat:q.cat });
+
+      addCatSeen(q.cat, isCorrect);
+
+      if(quizMode === 'study'){
+        if(isCorrect) clickedBtn.classList.add('correct');
+        else {
+          clickedBtn.classList.add('incorrect');
+          btns[q.c]?.classList.add('correct');
+        }
+        $('q-explain').innerHTML = `<strong>Explanation:</strong> ${q.e}`;
+        $('q-explain').style.display='block';
+        $('next-btn').style.display='block';
+        $('score-display').textContent = `Score: ${score}`;
+      } else {
+        clickedBtn.style.borderColor = 'var(--primary)';
+        clickedBtn.style.background = 'color-mix(in srgb, var(--primary), transparent 92%)';
+        $('score-display').textContent = `Answered: ${qIndex+1}/${currentQs.length}`;
+        setTimeout(nextQuestion, 420);
+      }
+    }
+
+    function nextQuestion(){
+      qIndex++;
+      if(qIndex < currentQs.length) loadQuestion();
+      else endQuiz();
+    }
+
+    function endQuiz(){
+      $('quiz-active').classList.add('hidden');
+      $('quiz-results').classList.remove('hidden');
+
+      const pct = Math.round((score/currentQs.length)*100);
+      $('final-score').textContent = `${pct}%`;
+
+      const msg =
+        pct >= 85 ? 'Outstanding — you’re ICDC-ready.' :
+        pct >= 70 ? 'Solid — drill your weakest categories next.' :
+        'Keep grinding — run drills until you’re consistently 80%+.';
+      $('final-msg').textContent = msg;
+
+      // Breakdown
+      if(missed.length === 0){
+        $('final-breakdown').innerHTML = `<span class="tag" style="background:#10b981">Perfect Run</span><p style="margin:10px 0 0">No misses. Increase difficulty by filtering categories and using Test Mode.</p>`;
+      } else {
+        const byCat = groupBy(missed, m=>m.cat);
+        const catList = Object.keys(byCat)
+          .sort((a,b)=>byCat[b].length - byCat[a].length)
+          .map(c=>`<span class="pill" style="margin:6px 6px 0 0">${c}: ${byCat[c].length}</span>`)
+          .join('');
+
+        const items = missed.slice(0,10).map(m=>
+          `<li style="margin:10px 0">
+            <div style="font-weight:950;color:var(--text-main)">${m.question}</div>
+            <div>✅ <strong>Correct:</strong> ${m.correct}</div>
+            <div>🧩 <strong>You picked:</strong> ${m.picked}</div>
+            <div style="opacity:.8">Category: ${m.cat}</div>
+          </li>`
+        ).join('');
+
+        $('final-breakdown').innerHTML = `
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <span class="tag" style="background:var(--secondary)">Missed ${missed.length}</span>
+            <button class="outline-btn" onclick="sendMissedToDrill()">Drill Missed Categories →</button>
+          </div>
+          <div style="margin-top:10px">${catList}</div>
+          <p style="margin:12px 0 0">Top misses (first ${Math.min(10, missed.length)}):</p>
+          <ul style="padding-left:18px;margin:8px 0 0">${items}</ul>
+        `;
+      }
+
+      saveStatsUpdate({
+        pct,
+        dateISO: new Date().toISOString(),
+        byCatDelta: catDelta
+      });
+
+      renderDashPill();
+    }
+
+    function resetQuiz(soft=false){
+      $('quiz-results').classList.add('hidden');
+      $('quiz-active').classList.add('hidden');
+      $('quiz-setup').classList.remove('hidden');
+      $('q-options').innerHTML='';
+      $('q-text').textContent='';
+      $('q-explain').style.display='none';
+      $('next-btn').style.display='none';
+
+      currentQs=[]; qIndex=0; score=0; missed=[]; catDelta={};
+      if(!soft) navTo('quiz');
+    }
+
+    // =============================
+    // DRILL MODE
+    // =============================
+    let drillSet = [];
+    let drillIndex = 0;
+    let drillCorrect = 0;
+    let drillMissedCats = null; // optional array
+
+    function resetDrill(){
+      drillSet=[]; drillIndex=0; drillCorrect=0; drillMissedCats=null;
+      $('drill-active').classList.add('hidden');
+      $('drill-results').classList.add('hidden');
+      toast('Drill reset');
+      renderCategoryStats();
+    }
+
+    function sendMissedToDrill(){
+      // choose up to 3 categories from misses
+      const cats = Array.from(new Set(missed.map(m=>m.cat)));
+      drillMissedCats = cats.slice(0,3);
+      navTo('drill');
+      toast('Drill will focus on your missed categories');
+    }
+
+    function renderCategoryStats(){
+      const s = loadStats();
+      const bank = loadBank();
+      const cats = getCategories(bank);
+
+      if(cats.length === 0){
+        $('cat-stats').textContent = 'No categories yet.';
+        return;
+      }
+
+      const rows = cats.map(cat=>{
+        const rec = s.byCat[cat] || {seen:0, correct:0};
+        const pct = rec.seen ? Math.round((rec.correct/rec.seen)*100) : null;
+        const label = rec.seen ? `${pct}% (${rec.correct}/${rec.seen})` : 'No data';
+        const tone = rec.seen ? (pct>=80 ? 'background:var(--success); color:var(--success-text); border-color:color-mix(in srgb, var(--success-text), transparent 70%)'
+          : pct>=60 ? 'background:var(--warn); color:var(--warn-text); border-color:color-mix(in srgb, var(--warn-text), transparent 70%)'
+          : 'background:var(--error); color:var(--error-text); border-color:color-mix(in srgb, var(--error-text), transparent 70%)')
+          : 'opacity:.85';
+
+        return `<div class="pill" style="justify-content:space-between; width:100%; ${tone}">
+          <span>${cat}</span><span>${label}</span>
+        </div>`;
+      }).join('<div style="height:8px"></div>');
+
+      $('cat-stats').innerHTML = rows;
+    }
+
+    function pickDrillCategories(){
+      const bank = loadBank();
+      const cats = getCategories(bank);
+      const s = loadStats();
+
+      if(drillMissedCats && drillMissedCats.length){
+        return drillMissedCats.filter(c=>cats.includes(c));
+      }
+
+      const strategy = $('drill-strategy').value;
+      if(strategy === 'random') return cats;
+
+      // Build weights from performance: lower pct => higher weight
+      const scored = cats.map(cat=>{
+        const rec = s.byCat[cat] || {seen:0, correct:0};
+        const pct = rec.seen ? (rec.correct/rec.seen) : 0.65; // default guess
+        return {cat, pct};
+      });
+
+      scored.sort((a,b)=>a.pct - b.pct);
+
+      if(strategy === 'weak'){
+        return scored.slice(0, Math.min(3, scored.length)).map(x=>x.cat);
+      }
+
+      // mixed weighted
+      return scored.map(x=>x.cat);
+    }
+
+    function startDrill(){
+      resetDrill();
+      const bank = loadBank();
+      const n = parseInt($('drill-count').value, 10);
+      const cats = pickDrillCategories();
+
+      const pool = bank.filter(q=>cats.includes(q.cat));
+      if(pool.length === 0){ toast('Not enough questions to drill yet.'); return; }
+
+      // Weighted selection: if strategy mixed, bias toward earlier cats list
+      const strategy = $('drill-strategy').value;
+      let picked = [];
+
+      if(strategy === 'random'){
+        picked = [...bank].sort(()=>Math.random()-0.5).slice(0, Math.min(n, bank.length));
+      } else if(strategy === 'weak'){
+        picked = [...pool].sort(()=>Math.random()-0.5).slice(0, Math.min(n, pool.length));
+      } else {
+        // weighted: 60% from weakest group pool, 40% random
+        const weakCats = cats.slice(0,3);
+        const weakPool = bank.filter(q=>weakCats.includes(q.cat));
+        const kWeak = Math.round(n*0.6);
+        const kRand = n - kWeak;
+        const partA = [...weakPool].sort(()=>Math.random()-0.5).slice(0, Math.min(kWeak, weakPool.length));
+        const partB = [...bank].sort(()=>Math.random()-0.5).slice(0, Math.min(kRand, bank.length));
+        picked = [...new Map([...partA, ...partB].map(x=>[x.id,x])).values()].slice(0, n);
+        if(picked.length < n){
+          const rest = [...bank].filter(q=>!picked.some(p=>p.id===q.id)).sort(()=>Math.random()-0.5);
+          picked = picked.concat(rest.slice(0, n-picked.length));
+        }
+      }
+
+      drillSet = picked;
+      drillIndex = 0;
+      drillCorrect = 0;
+
+      $('drill-active').classList.remove('hidden');
+      renderDrillQ();
+    }
+
+    function renderDrillQ(){
+      const q = drillSet[drillIndex];
+      $('drill-progress').textContent = `Drill ${drillIndex+1}/${drillSet.length}`;
+      $('drill-cat').textContent = `Category: ${q.cat}`;
+      $('drill-score').textContent = `Correct: ${drillCorrect}`;
+      $('drill-q').textContent = q.q;
+
+      $('drill-exp').style.display='none';
+      $('drill-exp').innerHTML='';
+      $('drill-next').style.display='none';
+
+      const wrap = $('drill-opts');
+      wrap.innerHTML='';
+      q.a.forEach((opt,i)=>{
+        const btn = document.createElement('button');
+        btn.className='quiz-option';
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.onclick = ()=>drillAnswer(i, btn, q);
+        wrap.appendChild(btn);
+      });
+    }
+
+    function drillAnswer(i, clickedBtn, q){
+      const btns = Array.from($('drill-opts').querySelectorAll('button'));
+      btns.forEach(b=>b.disabled=true);
+
+      const correct = (i===q.c);
+      if(correct){ drillCorrect++; clickedBtn.classList.add('correct'); }
+      else { clickedBtn.classList.add('incorrect'); btns[q.c]?.classList.add('correct'); }
+
+      // update category stats live
+      const delta = {}; delta[q.cat] = { seen:1, correct: correct?1:0 };
+      const pctBefore = loadStats(); // noop, but keep stable
+      saveStatsUpdate({ pct: (loadStats().last?.pct ?? 0), dateISO: (loadStats().last?.date ?? new Date().toISOString()), byCatDelta: delta });
+
+      $('drill-exp').innerHTML = `<strong>Explanation:</strong> ${q.e}`;
+      $('drill-exp').style.display='block';
+      $('drill-next').style.display='block';
+      $('drill-score').textContent = `Correct: ${drillCorrect}`;
+    }
+
+    function drillNext(){
+      drillIndex++;
+      if(drillIndex < drillSet.length){
+        renderDrillQ();
+      } else {
+        finishDrill();
+      }
+    }
+
+    function finishDrill(){
+      $('drill-active').classList.add('hidden');
+      $('drill-results').classList.remove('hidden');
+      const pct = Math.round((drillCorrect/drillSet.length)*100);
+      $('drill-final').textContent = `${pct}%`;
+      $('drill-notes').textContent = pct>=80 ? 'Nice — raise difficulty or drill a different category.' : 'Focus: rerun the drill and slow down for explanations.';
+      drillMissedCats = null;
+      renderCategoryStats();
+    }
+
+    // =============================
+    // ROLEPLAY
+    // =============================
+    function generateCase(){
+      const rp = scenarios[Math.floor(Math.random()*scenarios.length)];
+      const pis = rp.pis.map(p=>`<li style="margin:6px 0">${p}</li>`).join('');
+
+      const html = `
+        <div class="card" id="rp-card">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center">
+            <span class="tag">HTDM Event</span>
+            <span class="pill" style="border-color:rgba(0,0,0,.08)">Team (2) • 30 min prep</span>
+          </div>
+          <h2 style="margin:12px 0 8px; font-weight:950">${rp.title}</h2>
+          <p style="margin:0 0 10px"><strong>Roles:</strong> ${rp.roles} <span style="opacity:.6">|</span> <strong>Judge:</strong> ${rp.judge}</p>
+          <div class="situation-box"><strong>Situation:</strong> ${rp.situation}</div>
+
+          <div class="grid-2">
+            <div>
+              <h4 style="margin:0 0 10px">Performance Indicators (7)</h4>
+              <ul style="padding-left:18px; margin:0">${pis}</ul>
+            </div>
+            <div>
+              <h4 style="margin:0 0 10px">Your Task</h4>
+              <div style="background:color-mix(in srgb, var(--white), #f1f5f9 35%); padding:14px; border-radius:12px; border:1px solid var(--border)">
+                ${rp.task.replace(/\n/g,'<br>')}
+              </div>
+              <div style="margin-top:10px; color:var(--text-light)">
+                Tip: Reference at least 1 metric (RevPAR/ADR/labor %) + 1 risk-control step.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      $('rp-container').innerHTML = html;
+      toast('New case generated');
+    }
+
+    function copyRoleplay(){
+      const card = document.getElementById('rp-card');
+      if(!card){ toast('Generate a case first'); return; }
+      const text = card.innerText;
+      navigator.clipboard.writeText(text).then(()=>toast('Case copied to clipboard')); 
+    }
+
+    // =============================
+    // PI DIVE
+    // =============================
+    function initPIDive(){
+      const container = $('pi-list-container');
+      container.innerHTML='';
+      piData.forEach(pi=>{
+        const div = document.createElement('div');
+        div.className='pi-item';
+        div.setAttribute('role','button');
+        div.setAttribute('tabindex','0');
+        div.innerHTML = `<strong style="font-weight:950">${pi.t}</strong><div class="pi-desc">${pi.d}</div>`;
+        div.onclick = ()=>{
+          const desc = div.querySelector('.pi-desc');
+          desc.style.display = (desc.style.display==='block') ? 'none' : 'block';
+        };
+        container.appendChild(div);
+      });
+    }
+
+    function expandAllPIs(open){
+      document.querySelectorAll('#pi-list-container .pi-desc').forEach(d=>{
+        d.style.display = open ? 'block' : 'none';
+      });
+    }
+
+    // =============================
+    // FLASHCARDS
+    // =============================
+    let fcIndex = 0;
+    function flipCard(){ $('fc-inner').classList.toggle('is-flipped'); }
+
+    function nextCard(){
+      fcIndex = (fcIndex + 1) % flashcards.length;
+      const inner = $('fc-inner');
+      inner.classList.remove('is-flipped');
+      setTimeout(()=>{
+        $('fc-term').textContent = flashcards[fcIndex].t;
+        $('fc-def').textContent = flashcards[fcIndex].d;
+      }, 200);
+    }
+
+    function shuffleFlashcards(){
+      flashcards = [...flashcards].sort(()=>Math.random()-0.5);
+      fcIndex = 0;
+      $('fc-inner').classList.remove('is-flipped');
+      $('fc-term').textContent = flashcards[0].t;
+      $('fc-def').textContent = flashcards[0].d;
+      toast('Flashcards shuffled');
+    }
+
+    // =============================
+    // TIMER
+    // =============================
+    let timerInterval = null;
+
+    function beep(){
+      if(!prefs.sound) return;
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type='sine';
+        o.frequency.value = 740;
+        g.gain.value = 0.06;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(()=>{o.stop(); ctx.close();}, 300);
+      }catch{}
+    }
+
+    function startTimer(min){
+      stopTimer();
+      let sec = min*60;
+      const display = $('timer-display');
+      const render = ()=>{
+        const m = Math.floor(sec/60);
+        const s = sec%60;
+        display.textContent = `${m}:${s<10?'0':''}${s}`;
+      };
+      render();
+
+      timerInterval = setInterval(()=>{
+        sec--;
+        if(sec < 0){
+          stopTimer();
+          beep();
+          alert("Time's Up!");
+          return;
+        }
+        render();
+      }, 1000);
+    }
+
+    function stopTimer(){
+      if(timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    // =============================
+    // SETTINGS / BANK MODALS
+    // =============================
+    function openSettings(){
+      openModal({
+        title:'Settings',
+        body:`
+          <div style="display:grid; gap:12px">
+            <div class="pill" style="justify-content:space-between"><span>Theme</span><span><strong>${prefs.theme}</strong></span></div>
+            <button class="outline-btn" onclick="toggleTheme()">Toggle Theme</button>
+            <button class="outline-btn" onclick="toggleSound()">Toggle Sound</button>
+            <hr style="border:none;border-top:1px solid var(--border); margin:6px 0">
+            <button class="danger-btn" onclick="clearStats()">Reset Stats</button>
+            <button class="danger-btn" onclick="resetBankToDefault()">Reset Question Bank</button>
+          </div>
+        `
+      });
+    }
+
+    function openBank(){
+      const bank = loadBank();
+      const text = JSON.stringify(bank, null, 2);
+      openModal({
+        title:'Question Bank (Import / Export)',
+        body:`
+          <p style="margin-top:0; color:var(--text-light)">Edit JSON carefully. Each question needs: <strong>id, cat, q, a (4 choices), c (0-3), e</strong>.</p>
+          <div style="display:grid; gap:10px">
+            <textarea id="bank-editor" rows="16" spellcheck="false">${escapeHtml(text)}</textarea>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <button onclick="saveBankFromEditor()">Save Bank</button>
+              <button class="outline-btn" onclick="downloadBank()">Download JSON</button>
+              <button class="outline-btn" onclick="uploadBank()">Upload JSON</button>
+              <button class="danger-btn" onclick="resetBankToDefault()">Reset to Default</button>
+            </div>
+            <div style="color:var(--text-light)">Tip: Add categories like <em>Finance</em>, <em>Marketing</em>, <em>Operations</em>, <em>Law</em>, <em>HR</em>.</div>
+          </div>
+        `
+      });
+    }
+
+    function escapeHtml(str){
+      return str
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;');
+    }
+
+    function saveBankFromEditor(){
+      try{
+        const raw = $('bank-editor').value;
+        const parsed = JSON.parse(raw);
+        if(!Array.isArray(parsed) || parsed.length===0) throw new Error('Bank must be a non-empty array');
+
+        // basic validation
+        for(const item of parsed){
+          if(typeof item.id !== 'string') throw new Error('Each question needs a string id');
+          if(typeof item.cat !== 'string') throw new Error('Each question needs a category');
+          if(typeof item.q !== 'string') throw new Error('Each question needs q');
+          if(!Array.isArray(item.a) || item.a.length !== 4) throw new Error('Each question needs 4 answer choices');
+          if(typeof item.c !== 'number' || item.c < 0 || item.c > 3) throw new Error('c must be 0-3');
+          if(typeof item.e !== 'string') throw new Error('Each question needs explanation e');
+        }
+
+        saveBank(parsed);
+        $('bank-count').textContent = parsed.length;
+        renderDashPill();
+        closeModal();
+      }catch(err){
+        alert('Bank save failed: ' + err.message);
+      }
+    }
+
+    function downloadBank(){
+      const bank = loadBank();
+      const blob = new Blob([JSON.stringify(bank, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'htdm_question_bank.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function uploadBank(){
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if(!file) return;
+        const text = await file.text();
+        $('bank-editor').value = text;
+        toast('Loaded file into editor — click Save Bank');
+      };
+      input.click();
+    }
+
+    function resetBankToDefault(){
+      localStorage.setItem(BANK_KEY, JSON.stringify(DEFAULT_BANK));
+      refreshQuizSetup();
+      renderDashPill();
+      toast('Bank reset to default');
+    }
+
+    // Modal framework
+    function openModal({title, body}){
+      const host = $('modal');
+      host.classList.remove('hidden');
+      host.setAttribute('aria-hidden','false');
+      host.innerHTML = `
+        <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+          <div class="modal">
+            <header>
+              <h2>${title}</h2>
+              <div style="display:flex; gap:10px; margin-left:auto">
+                <button class="outline-btn" onclick="closeModal()">Close</button>
+              </div>
+            </header>
+            <div class="body">${body}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeModal(){
+      const host = $('modal');
+      host.classList.add('hidden');
+      host.setAttribute('aria-hidden','true');
+      host.innerHTML = '';
+    }
+
+    // =============================
+    // UTIL
+    // =============================
+    function groupBy(arr, fn){
+      return arr.reduce((acc, x)=>{
+        const k = fn(x);
+        (acc[k] ||= []).push(x);
+        return acc;
+      }, {});
+    }
+
+    // =============================
+    // INIT
+    // =============================
+    function init(){
+      loadPrefs();
+      initPIDive();
+
+      // initialize flashcard face
+      $('fc-term').textContent = flashcards[0].t;
+      $('fc-def').textContent = flashcards[0].d;
+
+      renderStats();
+      renderDashPill();
+      refreshQuizSetup();
+      renderCategoryStats();
+    }
+
+    init();
+  </script>
+</body>
+</html>
